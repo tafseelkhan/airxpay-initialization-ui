@@ -1,8 +1,14 @@
-# AirXPay Flixora SDK - Seller Onboard
+📘 AirXPay Initialization UI Components
+---
 
 <div align="center">
 <img src="./assets/images/flixora.png" alt="AirXPay Flixora SDK"/>
 </div>
+
+---
+
+AirXPay Initialization UI is a React & React Native component library to simplify seller onboarding in your apps. It provides ready-to-use steps for Basic Details, KYC Verification, Bank Details, and Completion, with smooth animations, progress tracking, and validation built-in.
+---
 
 **Enterprise-grade TypeScript SDK** for seamless seller onboarding in multi-tenant SaaS platforms. Built with ❤️ by the **Flixora Ecosystem**. Powered by **AirXPay** for payouts and payments, integrated with **TizzyGo**, **TizzyOS**, and soon **TizzyChat** for real-time notifications. Made with a **smiles-first philosophy**, designed to evolve and upgrade continuously for future generations.
 
@@ -13,78 +19,52 @@
 **I hope you understand. Thanks for your reading.😊❤️**
 
 ---
-## Table of Contents
 
-1. [Overview](#overview)  
-2. [Features](#features)  
-3. [Installation](#installation)  
-4. [Environment Setup](#environment-setup)  
-5. [SDK Initialization](#sdk-initialization)  
-6. [API Methods](#api-methods)  
-7. [Usage Examples](#usage-examples)  
-   - [React / React Native](#react--react-native)  
-   - [TypeScript / JavaScript](#typescript--javascript)  
-8. [Folder Structure](#folder-structure)  
-9. [Advanced Usage](#advanced-usage)  
-10. [Error Handling](#error-handling)  
-11. [FAQ](#faq)  
-12. [Support & Contact](#support--contact)  
-13. [License](#license)
+🔹 Features
 
----
+Multi-step seller onboarding UI
 
-## 1. Overview
+Step validation and completion tracking
 
-The **AirXPay Flixora SDK - Seller Onboard** is a **robust, future-ready SDK** designed to handle seller creation, KYC document uploads, bank account management, and real-time onboarding status tracking.  
+Animated step transitions
 
-Powered by the **Flixora Ecosystem**:  
-- **TizzyGo**: Payment routing & processing  
-- **TizzyOS**: Financial OS for SaaS & e-commerce  
-- **TizzyChat**: Real-time notifications (coming soon)  
+Integrated KYC & Bank Details checks
 
-**Key Principles:**  
-- Seamless integration  
-- Multi-developer SaaS readiness  
-- Future-proof architecture  
+Loading and submission states
 
-> "Build once, onboard anywhere – from startups to enterprise SaaS."  
+Compatible with React Native Paper, Expo, and React 18+
 
----
+Configurable AirXPayProvider for API integration
 
-## 2. Features
+Fully typed with TypeScript
 
-| Feature | Description |
-|---------|-------------|
-| Seller Creation | Create seller profiles with required metadata |
-| KYC Upload | Upload identity documents for verification |
-| Bank Integration | Add and update payout bank accounts |
-| Status Tracking | Poll for pending or completed onboarding |
-| Multi-Tenant Ready | Each developer or tenant isolated via keys |
-| TypeScript First | Full type safety & IntelliSense |
-| React / React Native Support | Native sheets, modal integration |
-| Logging & Retry | Automatic retry, request & response interceptors |
-| Security | Data encryption, key validation, rate limiting |
+Modular and reusable components
+
+📦 Installation
+
+Ensure you are inside your React Native / Expo project:
+
+npm install react-native react-native-paper react-native-country-picker-modal expo-image-picker expo-linear-gradient
+
+
+Or with Yarn:
+
+yarn add react-native react-native-paper react-native-country-picker-modal expo-image-picker expo-linear-gradient
+
+
+Then, install the UI package (if you are using it locally):
+
+npm install --save path/to/airxpay-initialization-ui
+
+🛠️ Prerequisites
+
+React 18+
+
+React Native >= 0.72
+
+Expo SDK (optional if using expo packages like LinearGradient or ImagePicker)
 
 ---
-
-## 3. Installation
-
-### npm
-```bash
-npm install airxpay
-````
-
-### yarn
-
-```bash
-yarn add airxpay
-```
-
-### Peer Dependencies
-
-```bash
-npm install axios
-```
 
 <div align="center">
 <img src="./assets/images/airxpay.png" alt="airxpay"/>
@@ -92,170 +72,131 @@ npm install axios
 
 ---
 
-## 4. Environment Setup
+🏗️ Usage
+1️⃣ Wrap your app in AirXPayProvider
 
-Create a `.env` file in your project root:
+All components rely on AirXPayProvider to access configuration like baseUrl and publicKey.
 
-```env
-AIRXPAY_BASE_URL=https://api.airxpay.com
-AIRXPAY_PUBLIC_KEY=your_public_key
-AIRXPAY_SECRET_KEY=your_secret_key
-AIRXPAY_CLIENT_KEY=your_client_key
+import React from 'react';
+import { AirXPayProvider } from 'airxpay-initialization-ui';
+import App from './App';
 
-NODE_ENV=development
-APP_NAME=YourApp
-```
+export default function Root() {
+  return (
+    <AirXPayProvider
+      config={{
+        baseUrl: 'https://api.airxpay.com',
+        publicKey: 'YOUR_PUBLIC_KEY_HERE',
+      }}
+    >
+      <App />
+    </AirXPayProvider>
+  );
+}
 
-Load environment variables using `dotenv` (if Node.js):
+2️⃣ Render SellerOnboardingSheet
+import React from 'react';
+import SellerOnboardingSheet from 'airxpay-initialization-ui/components/SellerOnboardingSheet';
 
-```ts
-import dotenv from 'dotenv';
-dotenv.config();
-```
-
----
-
-## 5. SDK Initialization
-
-```ts
-import { AirXPay } from 'airxpay';
-
-const sdk = new AirXPay({
-  baseUrl: process.env.AIRXPAY_BASE_URL!,
-  secretKey: process.env.AIRXPAY_SECRET_KEY!,
-  clientKey: process.env.AIRXPAY_CLIENT_KEY!
-});
-```
-
----
-
-## 6. API Methods
-
-| Method                              | Description                     |
-| ----------------------------------- | ------------------------------- |
-| `createSeller(seller, keys)`        | Create a new seller             |
-| `updateKyc(sellerId, docs)`         | Upload KYC documents            |
-| `updateBank(sellerId, bankDetails)` | Add or update bank info         |
-| `getPendingStatus(sellerId)`        | Fetch pending onboarding status |
-
----
-
-## 7. Usage Examples
-
-### React / React Native
-
-```tsx
-import React, { useEffect } from 'react';
-import { AirXPay } from 'airxpay';
-
-export const SellerComponent = () => {
-  useEffect(() => {
-    const sdk = new AirXPay({ 
-      baseUrl: process.env.AIRXPAY_BASE_URL!, 
-      secretKey: process.env.AIRXPAY_SECRET_KEY!, 
-      clientKey: process.env.AIRXPAY_CLIENT_KEY! 
-    });
-
-    const seller = {
-      sellerName: "Jane Doe",
-      sellerEmail: "jane@example.com",
-      sellerPhone: "+911234567890",
-      businessName: "Jane's Store",
-      businessType: "Retail",
-      country: "IN"
-    };
-
-    const keys = {
-      publicKey: process.env.AIRXPAY_PUBLIC_KEY!,
-      secretKey: process.env.AIRXPAY_SECRET_KEY!,
-      clientKey: process.env.AIRXPAY_CLIENT_KEY!
-    };
-
-    sdk.createSeller(seller, keys).then(console.log).catch(console.error);
-  }, []);
-
-  return <div>Seller onboarding in progress...</div>;
+const MySellerOnboarding = () => {
+  return (
+    <SellerOnboardingSheet
+      sellerId="12345"
+      mode="live"
+      isKycCompleted={false}
+      isBankDetailsCompleted={false}
+      kycStatus="pending"
+      status="pending"
+      onNext={(stepData, currentStep) => {
+        console.log('Step completed:', currentStep, stepData);
+      }}
+      onBack={(currentStep) => {
+        console.log('Went back from step:', currentStep);
+      }}
+      onComplete={(sellerData) => {
+        console.log('Seller onboarding complete!', sellerData);
+      }}
+    />
+  );
 };
-```
 
-### TypeScript / JavaScript (Node.js)
+export default MySellerOnboarding;
 
-```ts
-import { AirXPay } from 'airxpay';
+🔹 Props
+Prop	Type	Required	Description
+sellerId	string	✅	Unique ID of the seller
+mode	`'live'	'test'`	✅
+isKycCompleted	boolean	✅	Whether KYC is already completed
+isBankDetailsCompleted	boolean	✅	Whether bank details are completed
+kycStatus	string	✅	Current KYC status (pending / verified)
+status	string	✅	Seller status (pending / active)
+initialStep	number	❌	Step to start from (default 1)
+initialData	Partial<Seller>	❌	Pre-filled seller data
+onNext	(stepData: Partial<Seller>, currentStep: number) => void	✅	Callback after completing a step
+onBack	(currentStep: number) => void	✅	Callback when going back a step
+onComplete	(sellerData: Seller) => void	✅	Callback when onboarding completes
+loading	boolean	❌	Show external loading state
+🔹 Step Components
 
-const sdk = new AirXPay({
-  baseUrl: process.env.AIRXPAY_BASE_URL!,
-  secretKey: process.env.AIRXPAY_SECRET_KEY!,
-  clientKey: process.env.AIRXPAY_CLIENT_KEY!
-});
+BasicDetailsForm – Collect seller name, email, and phone
 
-const sellerData = { /* seller object */ };
-const keys = { /* developer keys */ };
+KYCVerification – Upload KYC documents, verify identity
 
-sdk.createSeller(sellerData, keys)
-   .then(res => console.log(res))
-   .catch(err => console.error(err));
-```
+BankDetails – Add bank account information
 
----
+OnboardingComplete – Show success state with animation
 
-## 8. Folder Structure
+🎨 Customization
 
-```
-airxpay/
-├─ src/
-│  ├─ index.ts
-│  ├─ api/
-│  ├─ config/
-│  ├─ types/
-│  └─ utils/
-├─ dist/            # Compiled JS
-├─ package.json
-├─ tsconfig.json
-└─ README.md
-```
+Logo: Change DEFAULT_LOGO in SellerOnboardingSheet or pass a custom logo prop
 
----
+Colors & Gradients: Modify LinearGradient and StyleSheet colors
 
-## 9. Advanced Usage
+Step Icons: Each step can have a custom icon via STEPS array
 
-* Singleton instance for global SDK
-* Factory pattern for multi-developer support
-* React Native bottom sheet integration
-* Automatic retries and interceptors
-* Logging & custom error handling
+⚙️ AirXPayProvider Configuration
+export interface AirXPayConfig {
+  baseUrl: string;    // API base URL
+  publicKey: string;  // API public key
+}
 
----
 
-## 10. Error Handling
+Validation occurs on mount
 
-| Status | Meaning      | Recommended Action |
-| ------ | ------------ | ------------------ |
-| 200    | Success      | Process normally   |
-| 400    | Bad Request  | Validate input     |
-| 401    | Unauthorized | Refresh keys       |
-| 403    | Forbidden    | Check permissions  |
-| 404    | Not Found    | Resource missing   |
-| 409    | Conflict     | Handle duplicate   |
-| 500    | Server Error | Retry request      |
+Invalid config will throw an error in dev mode
 
----
+useAirXPay() hook provides config safely
 
-## 11. FAQ
+📌 Hooks
+Hook	Description
+useAirXPay()	Returns AirXPay config, throws if provider missing
+useAirXPaySafe()	Returns AirXPay config or null if missing
+useAirXPayConfig(key)	Access single config value (baseUrl or publicKey)
+useIsAirXPayReady()	Returns true if provider has valid config
+💡 Notes
 
-* Can I use this in React Native? ✅ Yes
-* Do I need TypeScript? ❌ Optional, works with JS too
-* Multi-developer support? ✅ Keys are isolated per developer
+Always wrap your component tree with <AirXPayProvider>
 
----
+KYC & Bank steps are required in live mode
 
-## 12. Support & Contact
+Animations are optimized for React Native, avoid heavy operations in step callbacks
 
-* Docs: [https://docs.flixora.com/airxpay](https://docs.flixora.com/airxpay)
-* Discord: [https://discord.gg/flixora](https://discord.gg/flixora)
-* Email: [support@flixora.com](mailto:support@flixora.com)
+Compatible with Expo managed workflow
 
----
+🚀 Example Project Structure
+/airxpay-initialization-ui
+  /components
+    /steps
+      BasicDetailsForm.tsx
+      KYCVerification.tsx
+      BankDetails.tsx
+      OnboardingComplete.tsx
+    SellerOnboardingSheet.tsx
+  /contexts
+    AirXPayProvider.tsx
+  /api
+    seller.ts
+  index.ts
 
 ## 13. License
 
