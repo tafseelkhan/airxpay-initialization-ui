@@ -6,28 +6,24 @@
   "license": "MIT",
   "types": "dist/index.d.ts",
   "main": "dist/index.js",
-
   "files": [
     "dist"
   ],
-
   "scripts": {
     "build": "tsc --project tsconfig.json --outDir dist && cpx \"src/types/**/*\" dist/types",
     "prepare": "npm run build"
   },
-
   "peerDependencies": {
     "react": ">=18",
     "react-native": ">=0.72"
   },
-
   "dependencies": {
     "axios": "^1.13.5"
   },
-
   "devDependencies": {
     "@react-native-community/datetimepicker": "^8.6.0",
     "@types/react": "^19.2.14",
+    "cpx": "^1.5.0",
     "expo-image-picker": "^17.0.10",
     "expo-linear-gradient": "^15.0.8",
     "react": "^19.2.4",
@@ -36,12 +32,10 @@
     "react-native-paper": "^5.15.0",
     "typescript": "^5.9.3"
   },
-
   "repository": {
     "type": "git",
     "url": "https://github.com/tafseelkhan/airxpay-sdk-ui.git"
   },
-
   "keywords": [
     "airxpay",
     "react-native",
@@ -49,10 +43,8 @@
     "payments",
     "ui"
   ],
-
   "bugs": {
     "url": "https://github.com/tafseelkhan/airxpay-sdk-ui/issues"
   },
-
   "homepage": "https://github.com/tafseelkhan/airxpay-sdk-ui#readme"
 }
