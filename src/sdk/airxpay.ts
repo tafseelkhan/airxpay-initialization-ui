@@ -1,9 +1,6 @@
 import { verifyPublicKey } from "../api/seller";
 
-export interface AirXPayConfig {
-  baseUrl: string;
-  publicKey: string;
-}
+import { AirXPayConfig } from '../types';
 
 export class AirXPay {
   private baseUrl: string;
