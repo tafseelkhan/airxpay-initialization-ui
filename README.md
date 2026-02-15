@@ -1,11 +1,5 @@
 📘 AirXPay Initialization UI Components
-
----
-
 <div align="center"> <img src="./assets/images/flixora.png" alt="AirXPay Flixora SDK" width="100"/> </div>
-
----
-
 🚀 Overview
 AirXPay Initialization UI is a production-ready React & React Native component library designed to streamline seller onboarding in multi-tenant SaaS applications. Built with TypeScript and enterprise-grade architecture, it provides a seamless, animated, and validated multi-step flow for collecting seller information.
 
@@ -28,16 +22,10 @@ Ensure you're in your React Native/Expo project:
 
 bash
 # Required peer dependencies
-npm install react-native-paper \
-  react-native-country-picker-modal \
-  expo-image-picker \
-  expo-linear-gradient
+npm install react-native-paper react-native-country-picker-modal expo-image-picker expo-linear-gradient
 
 # Or with Yarn
-yarn add react-native-paper \
-  react-native-country-picker-modal \
-  expo-image-picker \
-  expo-linear-gradient
+yarn add react-native-paper react-native-country-picker-modal expo-image-picker expo-linear-gradient
 Install the Package
 bash
 # For local development
@@ -55,18 +43,18 @@ Expo SDK (optional, for LinearGradient & ImagePicker)
 🏗️ Architecture
 text
 airxpay-initialization-ui/
-├── 📁 components/
-│   ├── 📁 steps/
+├── components/
+│   ├── steps/
 │   │   ├── BasicDetailsForm.tsx
 │   │   ├── KYCVerification.tsx
 │   │   ├── BankDetails.tsx
 │   │   └── OnboardingComplete.tsx
 │   └── SellerOnboardingSheet.tsx
-├── 📁 contexts/
+├── contexts/
 │   └── AirXPayProvider.tsx
-├── 📁 api/
+├── api/
 │   └── seller.ts
-├── 📁 hooks/
+├── hooks/
 │   ├── useAirXPay.ts
 │   ├── useAirXPaySafe.ts
 │   └── useIsAirXPayReady.ts
@@ -120,15 +108,7 @@ const MySellerOnboarding = () => {
 };
 
 export default MySellerOnboarding;
-
----
-
-<div align="center">
-  <img src="./assets/images/airxpay.png" alt="AirXPay" width="100"/>
-</div>
-
----
-
+<div align="center"> <img src="./assets/images/airxpay.png" alt="AirXPay Flixora SDK" width="100"/> </div>
 📋 Component API
 SellerOnboardingSheet Props
 Prop	Type	Required	Default	Description
