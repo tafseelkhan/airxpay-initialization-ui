@@ -127,6 +127,7 @@ The **@airxpay/sdk-ui** package provides powerful utility hooks for accessing co
 </div>
 
 <br>
+<br>
 
 ```jsx
 import { 
@@ -145,7 +146,7 @@ useProviderReady	boolean	✅ Silent	⏳ State	Async Loading	🟢 Low
 useAirXPayConfig	string	✅ Silent	🎯 Targeted	Single Values	🟢 Low
 <br> <hr> <br>
 🎯 Detailed Hook Catalog
-
+<br> <br>
 1️⃣ useAirXPay() — Full Configuration Access
 
 jsx
@@ -310,16 +311,14 @@ function PaymentProcessor() {
   // Critical payment logic here
 }
 
-<br>
-
+jsx
 // 🧪 REUSABLE COMPONENTS - Flexible Provider Optional
 function UIComponent() {
   const config = useAirXPaySafe(); // Safe, handles missing provider
   return <div>{config ? <Connected /> : <Fallback />}</div>;
 }
 
-<br>
-
+jsx
 // ⏰ LOADING MANAGEMENT - Async State Handling
 function AppRouter() {
   const isReady = useProviderReady(); // Wait for SDK init
@@ -327,8 +326,7 @@ function AppRouter() {
   return <AuthenticatedApp />;
 }
 
-<br>
-
+jsx
 // 🎯 CONFIG ACCESS - Focused Value Retrieval
 function Analytics() {
   const baseUrl = useAirXPayConfig('baseUrl'); // Only what you need
