@@ -131,19 +131,29 @@ import {
   useProviderReady, 
   useAirXPayConfig 
 } from '@airxpay/sdk-ui';
+
 📋 Quick Reference Matrix
+
 Hook	Returns	Error	Safe	Use Case
+
 useAirXPay	{ baseUrl, publicKey }	⚠️ Throws	❌	Core production components
+
 useAirXPaySafe	config | null	✅ No	✅	Shared/components/testing
+
 useProviderReady	boolean	✅ No	✅	Async/loading states
+
 useAirXPayConfig	string	✅ No	✅	Single value access
+
 🎯 Hook Catalog
+
 <div align="center">
 Hook	Behavior	When to Use	Recommended For
 </div>
+
 1️⃣ useAirXPay() 🔒 Strict Mode
 jsx
 const { baseUrl, publicKey } = useAirXPay();
+
 Property	Details
 ⚠️ Error	Throws if provider missing
 📦 Returns	Full config object
@@ -158,6 +168,7 @@ Production Ready 🚀 - Use when provider is guaranteed
 
 2️⃣ useAirXPaySafe() 🛡️ Safe Mode
 jsx
+
 const safeConfig = useAirXPaySafe(); // Returns null if no provider
 Property	Details
 ✅ Error	No error, returns null
@@ -173,13 +184,13 @@ Flexible Choice 🌟 - Use when provider might be missing
 
 3️⃣ useProviderReady() ⏳ State Check
 jsx
+
 const isReady = useProviderReady(); // true/false
 Property	Details
 ✅ Error	Never throws
 📦 Returns	Boolean
 🎮 Control	Async handling
 Perfect for:
-
 jsx
 // 🎨 Conditional rendering
 // ⏰ Loader components
@@ -188,6 +199,7 @@ Initialization Guardian 🛡️ - Use for async setup
 
 4️⃣ useAirXPayConfig(key) 🎯 Targeted Access
 jsx
+
 const baseUrl = useAirXPayConfig('baseUrl');  // Returns string
 const pubKey = useAirXPayConfig('publicKey'); // Returns string
 Property	Details
@@ -203,13 +215,21 @@ jsx
 Precision Tool 🎯 - Use for specific config values
 
 📊 Detailed Comparison Table
+
 Feature	useAirXPay	useAirXPaySafe	useProviderReady	useAirXPayConfig
+
 Return Type	object	object | null	boolean	string
+
 Throws Error	✅ Yes	❌ No	❌ No	❌ No
+
 Null Safe	❌ No	✅ Yes	✅ Yes	✅ Yes
+
 Provider Required	✅ Yes	❌ No	❌ No	❌ No
+
 Use Case	Full config	Optional config	Init state	Single value
+
 Complexity	High	Medium	Low	Low
+
 🎨 Visual Usage Guide
 jsx
 // 🚀 PRODUCTION - Strict access
@@ -235,13 +255,18 @@ function ApiClient() {
   const baseUrl = useAirXPayConfig('baseUrl');
   return fetch(`${baseUrl}/api/data`);
 }
+
 💡 Pro Tips Corner
+
 Tip	Hook	Why
+
 🚀 Strict Mode	useAirXPay	When you NEED the provider
 🛡️ Defensive Mode	useAirXPaySafe	For shared components
 ⏳ Loading States	useProviderReady	Handle async gracefully
 🎯 Clean Code	useAirXPayConfig	Avoid destructuring
+
 <div align="center">
+
 ⚡ Quick Decision Maker
 Need guaranteed access? → useAirXPay
 Building shared components? → useAirXPaySafe
