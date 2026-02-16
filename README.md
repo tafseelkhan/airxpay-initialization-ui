@@ -211,7 +211,7 @@ export default MySellerOnboarding;
 import { 
   useAirXPay,           // Access config (throws if no provider)
   useAirXPaySafe,       // Safe access (returns null if no provider)
-  useIsAirXPayReady,    // Hook: checks if provider is ready
+  useProviderReady,    // Hook: checks if provider is ready
   useAirXPayConfig,     // Access specific config value
   AirXPayConsumer       // Context consumer for advanced use
 } from '@airxpay/sdk-ui';
@@ -219,7 +219,7 @@ import {
 // Example usage
 const { baseUrl, publicKey } = useAirXPay();
 const config = useAirXPaySafe();
-const isReady = useIsAirXPayReady();
+const isReady = useProviderReady();
 const baseUrl = useAirXPayConfig('baseUrl');
 ```
 
@@ -333,7 +333,7 @@ Step 4: Completion
 ```tsx
 // Main exports from index.ts
 export { useIsAirXPayReady } from "./sdk/airxpay";           // Class for async init
-export { AirXPayProvider } from "./contexts/AirXPayProvider";
+export { AirXPayProvider, useProviderReady, useAirXPayConfig, useAirXPaySafe, useAirXPay } from "./contexts/AirXPayProvider";
 export { default as useAirXPaySheet } from "./hooks/SellerOnboarding";
 export { __DEV__ } from './types/dev';
 
