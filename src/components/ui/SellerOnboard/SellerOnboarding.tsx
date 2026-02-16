@@ -46,7 +46,7 @@ const STEPS: ExtendedStepConfig[] = [
 ];
 
 // Default logo - can be overridden via props
-const DEFAULT_LOGO = require('../../../../../../assets/images/airxpay.png');
+const DEFAULT_LOGO = require('../../../assets/images/airxpay.png');
 
 const SellerOnboardingSheet: React.FC<SellerOnboardingProps> = ({
   sellerId,

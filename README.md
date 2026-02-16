@@ -28,7 +28,7 @@
 ---
 
 <div align="center">
-  <img src="./assets/images/airxpay.png" alt="AirXPay Flixora SDK" width="120"/>
+  <img src="./src/assets/images/airxpay.png" alt="AirXPay Flixora SDK" width="120"/>
 </div>
 
 ---
