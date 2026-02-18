@@ -1,5 +1,5 @@
 {
-  "name": "@airxpay/sdk-init-ui",
+  "name": "@flixora/airxpay-sdk-init-ui",
   "version": "1.0.0",
   "description": "AirXPay Initialization UI Components for React & React Native",
   "author": "Tafseel Khan",
@@ -36,7 +36,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/tafseelkhan/airxpay-sdk-init-ui.git"
+    "url": "git+https://github.com/tafseelkhan/airxpay-sdk-init-ui.git"
   },
   "keywords": [
     "airxpay",

@@ -1,4 +1,4 @@
-# 🚀 @airxpay/sdk-init-ui
+# 🚀 @flixora/airxpay-sdk-init-ui
 
 <div align="center">
   <img src="./src/assets/images/airxpay.png" alt="AirXPay" width="120"/>
@@ -74,9 +74,9 @@
 ## 📦 Installation
 
 ```bash
-npm install @airxpay/sdk-init-ui
+npm install @flixora/airxpay-sdk-init-ui
 # or
-yarn add @airxpay/sdk-init-ui
+yarn add @flixora/airxpay-sdk-init-ui
 ```
 
 ### Peer Dependencies
@@ -93,7 +93,7 @@ npm install react react-native react-native-paper @react-native-async-storage/as
 
 ```tsx
 // App.tsx
-import { AirXPayProvider } from '@airxpay/sdk-init-ui';
+import { AirXPayProvider } from '@flixora/airxpay-sdk-init-ui';
 
 const App = () => {
   const config = {
@@ -115,7 +115,7 @@ const App = () => {
 ```tsx
 // MerchantOnboardingScreen.tsx
 import React from 'react';
-import { MerchantOnboarding } from '@airxpay/sdk-init-ui';
+import { MerchantOnboarding } from '@flixora/airxpay-sdk-init-ui';
 
 const MerchantOnboardingScreen = () => {
   const handleComplete = (merchantData) => {
@@ -143,7 +143,7 @@ const MerchantOnboardingScreen = () => {
 ## 🏗 Architecture
 
 ```
-@airxpay/sdk-init-ui/
+@flixora/airxpay-sdk-init-ui/
 ├── components/
 │   ├── steps/
 │   │   ├── BasicDetailsForm      # Step 1: Basic Info
@@ -490,7 +490,7 @@ import {
   AirXPayProvider, 
   MerchantOnboarding,
   OnboardingCompleteScreen 
-} from '@airxpay/sdk-init-ui';
+} from '@flixora/airxpay-sdk-init-ui';
 
 export default function App() {
   const [step, setStep] = useState<'onboarding' | 'complete'>('onboarding');
