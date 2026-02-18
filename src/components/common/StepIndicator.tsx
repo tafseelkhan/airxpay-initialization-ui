@@ -4,7 +4,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { IconButton } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
-import { StepConfig, Mode } from '../../types/sellertypes';
+import { StepConfig, Mode } from '../../types/merchantTypes';
 
 interface StepIndicatorProps {
   currentStep: number;

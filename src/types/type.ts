@@ -1,10 +1,11 @@
+// types/merchantTypes.ts
+
 export interface AirXPayConfig {
-  baseUrl: string;
   publicKey: string;
 }
 
-export interface SellerData {
-  sellerName: string;
-  sellerEmail: string;
-  phone?: string;
+export interface MerchantData {
+  merchantName: string;
+  merchantEmail: string;
+  merchantPhone?: string;
 }

@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { ActivityIndicator } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
-import { Mode } from '../../types/sellertypes';
+import { Mode } from '../../types/merchantTypes';
 
 interface FileUploaderProps {
   label: string;

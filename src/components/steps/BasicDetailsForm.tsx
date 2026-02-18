@@ -10,6 +10,7 @@ import {
   Platform,
   Animated,
   Keyboard,
+  KeyboardAvoidingView,
 } from 'react-native';
 import {
   TextInput,
@@ -22,12 +23,12 @@ import {
 } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import CountryDropdown from '../common/CountryDropdown';
-import { Seller, FormErrors, BusinessType } from '../../types/sellertypes';
+import { Merchant, FormErrors, BusinessType } from '../../types/merchantTypes';
 import { LinearGradient } from 'expo-linear-gradient';
 
 interface BasicDetailsFormProps {
-  initialData: Partial<Seller>;
-  onNext: (data: Partial<Seller>) => void;
+  initialData: Partial<Merchant>;
+  onNext: (data: Partial<Merchant>) => void;
   errors: FormErrors;
   setErrors: (errors: FormErrors) => void;
 }
@@ -43,10 +44,10 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({
   const slideAnim = useRef(new Animated.Value(50)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
 
-  const [formData, setFormData] = useState<Partial<Seller>>({
-    sellerName: '',
-    sellerEmail: '',
-    sellerPhone: '',
+  const [formData, setFormData] = useState<Partial<Merchant>>({
+    merchantName: '',
+    merchantEmail: '',
+    merchantPhone: '',
     businessName: '',
     businessType: 'individual' as BusinessType,
     businessCategory: '',
@@ -83,21 +84,23 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({
     ]).start();
   }, []);
 
-  const validateField = (field: keyof Seller, value: any): string | undefined => {
+  const validateField = (field: keyof Merchant, value: any): string | undefined => {
     switch (field) {
-      case 'sellerName':
-        if (!value?.trim()) return 'Seller name is required';
+      case 'merchantName':
+        if (!value?.trim()) return 'Merchant name is required';
         if (value.length < 2) return 'Name must be at least 2 characters';
         if (value.length > 50) return 'Name must be less than 50 characters';
+        if (!/^[a-zA-Z\s'-]+$/.test(value)) return 'Name contains invalid characters';
         return undefined;
 
-      case 'sellerEmail':
+      case 'merchantEmail':
         if (!value?.trim()) return 'Email is required';
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        // More comprehensive email regex
+        const emailRegex = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
         if (!emailRegex.test(value)) return 'Invalid email format';
         return undefined;
 
-      case 'sellerPhone':
+      case 'merchantPhone':
         if (value && !/^\d{10}$/.test(value.replace(/\D/g, ''))) {
           return 'Phone must be 10 digits';
         }
@@ -114,7 +117,12 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({
     }
   };
 
-  const handleChange = (field: keyof Seller, value: any) => {
+  const handleChange = (field: keyof Merchant, value: any) => {
+    // Format phone number
+    if (field === 'merchantPhone') {
+      value = value.replace(/\D/g, '');
+    }
+    
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Validate on change
@@ -129,7 +137,7 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({
     setErrors(newErrors);
   };
 
-  const handleBlur = (field: keyof Seller) => {
+  const handleBlur = (field: keyof Merchant) => {
     setFocusedField(null);
     setTouched(prev => ({ ...prev, [field]: true }));
     const error = validateField(field, formData[field]);
@@ -157,7 +165,7 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
-    const requiredFields: (keyof Seller)[] = ['sellerName', 'sellerEmail'];
+    const requiredFields: (keyof Merchant)[] = ['merchantName', 'merchantEmail'];
     
     if (formData.businessType === 'company') {
       requiredFields.push('businessName');
@@ -195,31 +203,19 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({
   };
 
   const isFormValid = () => {
-    const requiredFields = ['sellerName', 'sellerEmail'];
+    const requiredFields = ['merchantName', 'merchantEmail'];
     if (formData.businessType === 'company') {
       requiredFields.push('businessName');
     }
     
     // Check if all required fields have values
     const allRequiredFilled = requiredFields.every(field => {
-      const value = formData[field as keyof Seller];
+      const value = formData[field as keyof Merchant];
       return typeof value === 'string' && value.trim().length > 0;
     });
 
     // Check if there are any errors
     const hasNoErrors = Object.keys(localErrors).length === 0;
-
-    console.log('Form Valid Check:', {
-      allRequiredFilled,
-      hasNoErrors,
-      localErrors,
-      formData: {
-        sellerName: formData.sellerName,
-        sellerEmail: formData.sellerEmail,
-        businessName: formData.businessName,
-        businessType: formData.businessType
-      }
-    });
 
     return allRequiredFilled && hasNoErrors;
   };
@@ -238,317 +234,325 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({
   ];
 
   return (
-    <Animated.View 
-      style={[
-        styles.container,
-        {
-          opacity: fadeAnim,
-          transform: [
-            { translateY: slideAnim },
-            { scale: scaleAnim }
-          ]
-        }
-      ]}
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
     >
-      <LinearGradient
-        colors={['#FFFFFF', '#F8F9FA']}
-        style={styles.gradient}
+      <Animated.View 
+        style={[
+          styles.container,
+          {
+            opacity: fadeAnim,
+            transform: [
+              { translateY: slideAnim },
+              { scale: scaleAnim }
+            ]
+          }
+        ]}
       >
-        <ScrollView 
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
+        <LinearGradient
+          colors={['#FFFFFF', '#F8F9FA']}
+          style={styles.gradient}
         >
-          {/* Header Card */}
-          <Surface style={styles.headerCard}>
-            <View style={styles.headerIcon}>
-              <IconButton
-                icon="account-details"
-                size={28}
-                iconColor="#0066CC"
-              />
-            </View>
-            <View style={styles.headerText}>
-              <Title style={styles.title}>Basic Information</Title>
-              <Text style={styles.subtitle}>
-                Tell us about yourself
-              </Text>
-            </View>
-          </Surface>
-
-          {/* Form Card */}
-          <Surface style={styles.formCard}>
-            {/* Compact Progress Steps */}
-            <View style={styles.progressContainer}>
-              <View style={styles.progressStep}>
-                <LinearGradient
-                  colors={['#0066CC', '#0099FF']}
-                  style={styles.progressDot}
+          <ScrollView 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+          >
+            {/* Header Card */}
+            <Surface style={styles.headerCard}>
+              <View style={styles.headerIcon}>
+                <IconButton
+                  icon="account-details"
+                  size={28}
+                  iconColor="#0066CC"
                 />
-                <Text style={styles.progressTextActive}>Basic</Text>
               </View>
-              <View style={styles.progressLine} />
-              <View style={styles.progressStep}>
-                <View style={[styles.progressDot, styles.progressDotInactive]} />
-                <Text style={styles.progressText}>KYC</Text>
+              <View style={styles.headerText}>
+                <Title style={styles.title}>Basic Information</Title>
+                <Text style={styles.subtitle}>
+                  Tell us about yourself
+                </Text>
               </View>
-              <View style={styles.progressLine} />
-              <View style={styles.progressStep}>
-                <View style={[styles.progressDot, styles.progressDotInactive]} />
-                <Text style={styles.progressText}>Bank</Text>
-              </View>
-            </View>
+            </Surface>
 
-            {/* Seller Name */}
-            <View style={styles.fieldContainer}>
-              <Text style={styles.label}>
-                Full Name <Text style={styles.requiredStar}>*</Text>
-              </Text>
-              <TextInput
-                mode="outlined"
-                value={formData.sellerName}
-                onChangeText={(text) => handleChange('sellerName', text)}
-                onBlur={() => handleBlur('sellerName')}
-                onFocus={() => handleFocus('sellerName')}
-                error={!!localErrors.sellerName}
-                style={styles.input}
-                outlineColor="#E5E7EB"
-                activeOutlineColor="#0066CC"
-                left={<TextInput.Icon icon="account" color="#6B7280" />}
-                placeholder="John Doe"
-                placeholderTextColor="#9CA3AF"
-              />
-              {localErrors.sellerName && (
-                <HelperText type="error" style={styles.errorText}>
-                  {localErrors.sellerName}
-                </HelperText>
-              )}
-            </View>
-
-            {/* Email */}
-            <View style={styles.fieldContainer}>
-              <Text style={styles.label}>
-                Email <Text style={styles.requiredStar}>*</Text>
-              </Text>
-              <TextInput
-                mode="outlined"
-                value={formData.sellerEmail}
-                onChangeText={(text) => handleChange('sellerEmail', text)}
-                onBlur={() => handleBlur('sellerEmail')}
-                onFocus={() => handleFocus('sellerEmail')}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                error={!!localErrors.sellerEmail}
-                style={styles.input}
-                outlineColor="#E5E7EB"
-                activeOutlineColor="#0066CC"
-                left={<TextInput.Icon icon="email" color="#6B7280" />}
-                placeholder="john@example.com"
-                placeholderTextColor="#9CA3AF"
-              />
-              {localErrors.sellerEmail && (
-                <HelperText type="error" style={styles.errorText}>
-                  {localErrors.sellerEmail}
-                </HelperText>
-              )}
-            </View>
-
-            {/* Phone */}
-            <View style={styles.fieldContainer}>
-              <Text style={styles.label}>Phone Number</Text>
-              <TextInput
-                mode="outlined"
-                value={formData.sellerPhone}
-                onChangeText={(text) => handleChange('sellerPhone', text)}
-                onBlur={() => handleBlur('sellerPhone')}
-                onFocus={() => handleFocus('sellerPhone')}
-                keyboardType="phone-pad"
-                error={!!localErrors.sellerPhone}
-                style={styles.input}
-                outlineColor="#E5E7EB"
-                activeOutlineColor="#0066CC"
-                left={<TextInput.Icon icon="phone" color="#6B7280" />}
-                placeholder="9876543210"
-                placeholderTextColor="#9CA3AF"
-              />
-              {localErrors.sellerPhone && (
-                <HelperText type="error" style={styles.errorText}>
-                  {localErrors.sellerPhone}
-                </HelperText>
-              )}
-            </View>
-
-            {/* Business Type - Compact Design */}
-            <View style={styles.fieldContainer}>
-              <Text style={styles.label}>
-                Business Type <Text style={styles.requiredStar}>*</Text>
-              </Text>
-              <View style={styles.businessTypeContainer}>
-                <TouchableOpacity 
-                  style={[
-                    styles.businessTypeButton,
-                    formData.businessType === 'individual' && styles.businessTypeButtonActive
-                  ]}
-                  onPress={() => handleChange('businessType', 'individual')}
-                >
-                  <IconButton 
-                    icon="account" 
-                    size={20} 
-                    iconColor={formData.businessType === 'individual' ? '#0066CC' : '#6B7280'}
+            {/* Form Card */}
+            <Surface style={styles.formCard}>
+              {/* Compact Progress Steps */}
+              <View style={styles.progressContainer}>
+                <View style={styles.progressStep}>
+                  <LinearGradient
+                    colors={['#0066CC', '#0099FF']}
+                    style={styles.progressDot}
                   />
-                  <Text style={[
-                    styles.businessTypeText,
-                    formData.businessType === 'individual' && styles.businessTypeTextActive
-                  ]}>
-                    Individual
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity 
-                  style={[
-                    styles.businessTypeButton,
-                    formData.businessType === 'company' && styles.businessTypeButtonActive
-                  ]}
-                  onPress={() => handleChange('businessType', 'company')}
-                >
-                  <IconButton 
-                    icon="office-building" 
-                    size={20} 
-                    iconColor={formData.businessType === 'company' ? '#0066CC' : '#6B7280'}
-                  />
-                  <Text style={[
-                    styles.businessTypeText,
-                    formData.businessType === 'company' && styles.businessTypeTextActive
-                  ]}>
-                    Company
-                  </Text>
-                </TouchableOpacity>
+                  <Text style={styles.progressTextActive}>Basic</Text>
+                </View>
+                <View style={styles.progressLine} />
+                <View style={styles.progressStep}>
+                  <View style={[styles.progressDot, styles.progressDotInactive]} />
+                  <Text style={styles.progressText}>KYC</Text>
+                </View>
+                <View style={styles.progressLine} />
+                <View style={styles.progressStep}>
+                  <View style={[styles.progressDot, styles.progressDotInactive]} />
+                  <Text style={styles.progressText}>Bank</Text>
+                </View>
               </View>
-            </View>
 
-            {/* Business Name - Show only for company */}
-            {formData.businessType === 'company' && (
+              {/* Merchant Name */}
               <View style={styles.fieldContainer}>
                 <Text style={styles.label}>
-                  Business Name <Text style={styles.requiredStar}>*</Text>
+                  Full Name <Text style={styles.requiredStar}>*</Text>
                 </Text>
                 <TextInput
                   mode="outlined"
-                  value={formData.businessName}
-                  onChangeText={(text) => handleChange('businessName', text)}
-                  onBlur={() => handleBlur('businessName')}
-                  onFocus={() => handleFocus('businessName')}
-                  error={!!localErrors.businessName}
+                  value={formData.merchantName}
+                  onChangeText={(text) => handleChange('merchantName', text)}
+                  onBlur={() => handleBlur('merchantName')}
+                  onFocus={() => handleFocus('merchantName')}
+                  error={!!localErrors.merchantName || !!errors.merchantName}
                   style={styles.input}
                   outlineColor="#E5E7EB"
                   activeOutlineColor="#0066CC"
-                  left={<TextInput.Icon icon="store" color="#6B7280" />}
-                  placeholder="Your Company Name"
+                  left={<TextInput.Icon icon="account" color="#6B7280" />}
+                  placeholder="John Doe"
                   placeholderTextColor="#9CA3AF"
                 />
-                {localErrors.businessName && (
+                {(localErrors.merchantName || errors.merchantName) && (
                   <HelperText type="error" style={styles.errorText}>
-                    {localErrors.businessName}
+                    {localErrors.merchantName || errors.merchantName}
                   </HelperText>
                 )}
               </View>
-            )}
 
-            {/* Business Category - Simplified */}
-            <View style={styles.fieldContainer}>
-              <Text style={styles.label}>Category</Text>
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                style={styles.categoryScroll}
-              >
-                <View style={styles.categoryContainer}>
-                  {businessCategories.map((category) => (
-                    <Chip
-                      key={category}
-                      selected={formData.businessCategory === category}
-                      onPress={() => handleChange('businessCategory', category)}
-                      style={[
-                        styles.categoryChip,
-                        formData.businessCategory === category && styles.categoryChipSelected
-                      ]}
-                      textStyle={formData.businessCategory === category && styles.categoryChipTextSelected}
-                      mode="outlined"
-                      compact
-                    >
-                      {category}
-                    </Chip>
-                  ))}
+              {/* Email */}
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>
+                  Email <Text style={styles.requiredStar}>*</Text>
+                </Text>
+                <TextInput
+                  mode="outlined"
+                  value={formData.merchantEmail}
+                  onChangeText={(text) => handleChange('merchantEmail', text)}
+                  onBlur={() => handleBlur('merchantEmail')}
+                  onFocus={() => handleFocus('merchantEmail')}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  error={!!localErrors.merchantEmail || !!errors.merchantEmail}
+                  style={styles.input}
+                  outlineColor="#E5E7EB"
+                  activeOutlineColor="#0066CC"
+                  left={<TextInput.Icon icon="email" color="#6B7280" />}
+                  placeholder="john@example.com"
+                  placeholderTextColor="#9CA3AF"
+                />
+                {(localErrors.merchantEmail || errors.merchantEmail) && (
+                  <HelperText type="error" style={styles.errorText}>
+                    {localErrors.merchantEmail || errors.merchantEmail}
+                  </HelperText>
+                )}
+              </View>
+
+              {/* Phone */}
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>Phone Number</Text>
+                <TextInput
+                  mode="outlined"
+                  value={formData.merchantPhone}
+                  onChangeText={(text) => handleChange('merchantPhone', text)}
+                  onBlur={() => handleBlur('merchantPhone')}
+                  onFocus={() => handleFocus('merchantPhone')}
+                  keyboardType="phone-pad"
+                  error={!!localErrors.merchantPhone}
+                  style={styles.input}
+                  outlineColor="#E5E7EB"
+                  activeOutlineColor="#0066CC"
+                  left={<TextInput.Icon icon="phone" color="#6B7280" />}
+                  placeholder="9876543210"
+                  placeholderTextColor="#9CA3AF"
+                  maxLength={10}
+                />
+                {localErrors.merchantPhone && (
+                  <HelperText type="error" style={styles.errorText}>
+                    {localErrors.merchantPhone}
+                  </HelperText>
+                )}
+              </View>
+
+              {/* Business Type */}
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>
+                  Business Type <Text style={styles.requiredStar}>*</Text>
+                </Text>
+                <View style={styles.businessTypeContainer}>
+                  <TouchableOpacity 
+                    style={[
+                      styles.businessTypeButton,
+                      formData.businessType === 'individual' && styles.businessTypeButtonActive
+                    ]}
+                    onPress={() => handleChange('businessType', 'individual')}
+                  >
+                    <IconButton 
+                      icon="account" 
+                      size={20} 
+                      iconColor={formData.businessType === 'individual' ? '#0066CC' : '#6B7280'}
+                    />
+                    <Text style={[
+                      styles.businessTypeText,
+                      formData.businessType === 'individual' && styles.businessTypeTextActive
+                    ]}>
+                      Individual
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity 
+                    style={[
+                      styles.businessTypeButton,
+                      formData.businessType === 'company' && styles.businessTypeButtonActive
+                    ]}
+                    onPress={() => handleChange('businessType', 'company')}
+                  >
+                    <IconButton 
+                      icon="office-building" 
+                      size={20} 
+                      iconColor={formData.businessType === 'company' ? '#0066CC' : '#6B7280'}
+                    />
+                    <Text style={[
+                      styles.businessTypeText,
+                      formData.businessType === 'company' && styles.businessTypeTextActive
+                    ]}>
+                      Company
+                    </Text>
+                  </TouchableOpacity>
                 </View>
-              </ScrollView>
-            </View>
+              </View>
 
-            {/* Country */}
-            <View style={styles.fieldContainer}>
-              <Text style={styles.label}>Country</Text>
-              <CountryDropdown
-                value={formData.country || 'India'}
-                onChange={(country) => {
-                  handleChange('country', country);
-                  handleChange('nationality', country);
-                }}
-                label=""
-              />
-            </View>
-
-            {/* Date of Birth */}
-            <View style={styles.fieldContainer}>
-              <Text style={styles.label}>Date of Birth</Text>
-              <TouchableOpacity 
-                onPress={() => setShowDatePicker(true)}
-                activeOpacity={0.7}
-              >
-                <View pointerEvents="none">
+              {/* Business Name - Show only for company */}
+              {formData.businessType === 'company' && (
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.label}>
+                    Business Name <Text style={styles.requiredStar}>*</Text>
+                  </Text>
                   <TextInput
                     mode="outlined"
-                    value={formData.dob}
+                    value={formData.businessName}
+                    onChangeText={(text) => handleChange('businessName', text)}
+                    onBlur={() => handleBlur('businessName')}
+                    onFocus={() => handleFocus('businessName')}
+                    error={!!localErrors.businessName}
                     style={styles.input}
                     outlineColor="#E5E7EB"
                     activeOutlineColor="#0066CC"
-                    left={<TextInput.Icon icon="cake" color="#6B7280" />}
-                    right={<TextInput.Icon icon="calendar" color="#6B7280" />}
-                    placeholder="DD/MM/YYYY"
+                    left={<TextInput.Icon icon="store" color="#6B7280" />}
+                    placeholder="Your Company Name"
                     placeholderTextColor="#9CA3AF"
                   />
+                  {localErrors.businessName && (
+                    <HelperText type="error" style={styles.errorText}>
+                      {localErrors.businessName}
+                    </HelperText>
+                  )}
                 </View>
-              </TouchableOpacity>
-            </View>
+              )}
 
-            {/* Submit Button */}
-            <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-              <Button
-                mode="contained"
-                onPress={handleSubmit}
-                disabled={!isFormValid()}
-                style={[
-                  styles.button,
-                  !isFormValid() && styles.buttonDisabled
-                ]}
-                labelStyle={styles.buttonLabel}
-                contentStyle={styles.buttonContent}
-              >
-                Continue
-              </Button>
-            </Animated.View>
+              {/* Business Category */}
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>Category</Text>
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.categoryScroll}
+                >
+                  <View style={styles.categoryContainer}>
+                    {businessCategories.map((category) => (
+                      <Chip
+                        key={category}
+                        selected={formData.businessCategory === category}
+                        onPress={() => handleChange('businessCategory', category)}
+                        style={[
+                          styles.categoryChip,
+                          formData.businessCategory === category && styles.categoryChipSelected
+                        ]}
+                        textStyle={formData.businessCategory === category && styles.categoryChipTextSelected}
+                        mode="outlined"
+                        compact
+                      >
+                        {category}
+                      </Chip>
+                    ))}
+                  </View>
+                </ScrollView>
+              </View>
 
-            {showDatePicker && (
-              <DateTimePicker
-                value={formData.dob ? new Date(formData.dob) : new Date()}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                onChange={handleDateChange}
-                maximumDate={new Date()}
-              />
-            )}
-          </Surface>
-        </ScrollView>
-      </LinearGradient>
-    </Animated.View>
+              {/* Country */}
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>Country</Text>
+                <CountryDropdown
+                  value={formData.country || 'India'}
+                  onChange={(country) => {
+                    handleChange('country', country);
+                    handleChange('nationality', country);
+                  }}
+                  label=""
+                />
+              </View>
+
+              {/* Date of Birth */}
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>Date of Birth</Text>
+                <TouchableOpacity 
+                  onPress={() => setShowDatePicker(true)}
+                  activeOpacity={0.7}
+                >
+                  <View pointerEvents="none">
+                    <TextInput
+                      mode="outlined"
+                      value={formData.dob}
+                      style={styles.input}
+                      outlineColor="#E5E7EB"
+                      activeOutlineColor="#0066CC"
+                      left={<TextInput.Icon icon="cake" color="#6B7280" />}
+                      right={<TextInput.Icon icon="calendar" color="#6B7280" />}
+                      placeholder="DD/MM/YYYY"
+                      placeholderTextColor="#9CA3AF"
+                    />
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              {/* Submit Button */}
+              <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+                <Button
+                  mode="contained"
+                  onPress={handleSubmit}
+                  disabled={!isFormValid()}
+                  style={[
+                    styles.button,
+                    !isFormValid() && styles.buttonDisabled
+                  ]}
+                  labelStyle={styles.buttonLabel}
+                  contentStyle={styles.buttonContent}
+                >
+                  Continue
+                </Button>
+              </Animated.View>
+
+              {showDatePicker && (
+                <DateTimePicker
+                  value={formData.dob ? new Date(formData.dob) : new Date()}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={handleDateChange}
+                  maximumDate={new Date()}
+                />
+              )}
+            </Surface>
+          </ScrollView>
+        </LinearGradient>
+      </Animated.View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -562,6 +566,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 12,
+    paddingBottom: 24,
   },
   headerCard: {
     flexDirection: 'row',

@@ -1,629 +1,623 @@
-# 📘 AirXPay Initialization UI Components
-
-<a href="#-typescript">
-  <img src="https://img.shields.io/badge/TypeScript-5.0+-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
-</a>
-<a href="#-react">
-  <img src="https://img.shields.io/badge/React-18.0+-61DAFB?style=for-the-badge&logo=react" alt="React" />
-</a>
-<a href="#-react-native">
-  <img src="https://img.shields.io/badge/React_Native-0.72+-61DAFB?style=for-the-badge&logo=react" alt="React Native" />
-</a>
-<a href="#-expo">
-  <img src="https://img.shields.io/badge/Expo-50+-000020?style=for-the-badge&logo=expo" alt="Expo" />
-</a>
-<a href="#-nextjs">
-  <img src="https://img.shields.io/badge/Next.js-14.0+-000000?style=for-the-badge&logo=next.js" alt="Next.js" />
-</a>
-<a href="#-javascript">
-  <img src="https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=for-the-badge&logo=javascript" alt="JavaScript" />
-</a>
-<a href="#-typescript">
-  <img src="https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript" alt="TypeScript" />
-</a>
-<a href="#-mit-license">
-  <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge&logo=open-source-initiative" alt="MIT License" />
-</a>
-
----
+# 🚀 @airxpay/sdk-init-ui
 
 <div align="center">
-  <img src="./src/assets/images/airxpay.png" alt="AirXPay Flixora SDK" width="120"/>
+  <img src="./src/assets/images/airxpay.png" alt="AirXPay" width="120"/>
+  <h3>Complete Merchant Onboarding Solution for React Native</h3>
+  <p>Beautiful, production-ready UI components for seamless merchant onboarding</p>
 </div>
 
 ---
 
-## 🚀 Overview
-
-AirXPay Initialization UI is a production-ready React & React Native component library designed to streamline seller onboarding in multi-tenant SaaS applications. Built with TypeScript and enterprise-grade architecture, it provides a seamless, animated, and validated multi-step flow for collecting seller information.
-
-> **Part of the Flixora Ecosystem** — Integrated with AirXPay for payments, TizzyGo for logistics, TizzyOS for operations, and soon TizzyChat for real-time notifications.
+<p align="center">
+  <a href="#-typescript">
+    <img src="https://img.shields.io/badge/TypeScript-5.0+-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+  </a>
+  <a href="#-react">
+    <img src="https://img.shields.io/badge/React-18.0+-61DAFB?style=for-the-badge&logo=react" alt="React" />
+  </a>
+  <a href="#-react-native">
+    <img src="https://img.shields.io/badge/React_Native-0.72+-61DAFB?style=for-the-badge&logo=react" alt="React Native" />
+  </a>
+  <a href="#-expo">
+    <img src="https://img.shields.io/badge/Expo-50+-000020?style=for-the-badge&logo=expo" alt="Expo" />
+  </a>
+  <a href="#-nextjs">
+    <img src="https://img.shields.io/badge/Next.js-14.0+-000000?style=for-the-badge&logo=next.js" alt="Next.js" />
+  </a>
+  <a href="#-javascript">
+    <img src="https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=for-the-badge&logo=javascript" alt="JavaScript" />
+  </a>
+  <a href="#-typescript">
+    <img src="https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript" alt="TypeScript" />
+  </a>
+  <a href="#-mit-license">
+    <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge&logo=open-source-initiative" alt="MIT License" />
+  </a>
+</p>
 
 ---
 
-## ✨ Key Features
+## 📋 Table of Contents
 
-| Feature | Description |
-|---------|-------------|
-| ✅ **Multi-step Flow** | Basic Details → KYC → Bank Details → Completion |
-| 🎨 **Animated Transitions** | Smooth step transitions with progress tracking |
-| 🔒 **Built-in Validation** | Form validation for each step |
-| 📸 **Document Upload** | Integrated with Expo ImagePicker for KYC documents |
-| 🏦 **Bank Verification** | Country-specific bank details collection |
-| 📊 **Progress Tracking** | Visual progress indicator with step status |
-| 🔧 **Configurable** | Customizable via AirXPayProvider |
-| 📘 **TypeScript** | Fully typed components, hooks, and classes |
-| 📱 **Cross-platform** | Works with React Native, Expo, and Web |
+- [Features](#-features)
+- [Installation](#-installation)
+- [Quick Start](#-quick-start)
+- [Architecture](#-architecture)
+- [Components](#-components)
+- [API Reference](#-api-reference)
+- [Hooks](#-hooks)
+- [Types](#-types)
+- [Backend Integration](#-backend-integration)
+- [Examples](#-examples)
+- [FAQ](#-faq)
+- [Contributing](#-contributing)
+- [License](#-license)
+
+---
+
+## ✨ Features
+
+✅ **Complete Onboarding Flow** - 5-step merchant onboarding process
+✅ **Beautiful UI** - Gradient designs, animations, and modern components
+✅ **Form Validation** - Real-time validation with error messages
+✅ **Document Upload** - File upload with progress indicators
+✅ **KYC Verification** - PAN, Aadhaar, GST validation
+✅ **Bank Details** - IFSC validation, account number masking
+✅ **Token Management** - Automatic token refresh and storage
+✅ **Error Handling** - Comprehensive error handling with user-friendly messages
+✅ **TypeScript** - Full type safety
+✅ **Modular Architecture** - Clean separation of concerns
+✅ **Production Ready** - Battle-tested code
 
 ---
 
 ## 📦 Installation
 
-### Prerequisites
+```bash
+npm install @airxpay/sdk-init-ui
+# or
+yarn add @airxpay/sdk-init-ui
+```
 
-Ensure you're in your React Native/Expo project:
+### Peer Dependencies
 
 ```bash
-# Required peer dependencies
-npm install react-native-paper react-native-country-picker-modal @react-native-community/datetimepicker expo-image-picker expo-linear-gradient
-
-# Or with Yarn
-yarn add react-native-paper react-native-country-picker-modal @react-native-community/datetimepicker expo-image-picker expo-linear-gradient
-```
-
-### Install the Package
-
-```bash
-# Install the package from npm
-npm install @airxpay/sdk-ui
-
-# Install package from yarn
-yarn add @airxpay/sdk-ui
-```
-
-### Requirements
-
-- React 18+
-- React Native >= 0.72
-- Expo SDK (optional, for LinearGradient & ImagePicker)
-
----
-
-## 🏗️ Architecture
-
-```
-@airxpay/sdk-ui/
-├── components/
-│   ├── steps/
-│   │   ├── BasicDetailsForm.tsx
-│   │   ├── KYCVerification.tsx
-│   │   ├── BankDetails.tsx
-│   │   └── OnboardingComplete.tsx
-│   └── ui/
-│       └── SellerOnboard/
-│           └── SellerOnboarding.tsx
-├── contexts/
-│   └── AirXPayProvider.tsx
-├── hooks/
-│   └── SellerOnboarding.tsx      # useAirXPaySheet
-├── api/
-│   └── seller.ts                  # verifyPublicKey
-├── types/
-│   ├── dev.ts                     # __DEV__
-│   └── type.ts                     # AirXPayConfig
-└── index.ts                        # Main exports
+npm install react react-native react-native-paper @react-native-async-storage/async-storage expo-linear-gradient @react-native-community/datetimepicker
 ```
 
 ---
 
 ## 🚀 Quick Start
 
-### 1️⃣ Wrap with Provider
+### 1. Wrap your app with Provider
 
 ```tsx
-// Root.tsx
-import React from 'react';
-import { AirXPayProvider } from '@airxpay/sdk-ui';
-import App from './App';
+// App.tsx
+import { AirXPayProvider } from '@airxpay/sdk-init-ui';
 
-export default function Root() {
+const App = () => {
+  const config = {
+    publicKey: 'your_public_key_here',
+    environment: 'test', // or 'live'
+    enableLogging: __DEV__,
+  };
+
   return (
-    <AirXPayProvider
-      config={{
-        baseUrl: 'https://api.airxpay.com',
-        publicKey: 'YOUR_PUBLIC_KEY_HERE',
-      }}
-      enableLogging={__DEV__} // Optional: enables detailed logs in development
-    >
-      <App />
+    <AirXPayProvider config={config}>
+      <YourApp />
+    </AirXPayProvider>
+  );
+};
+```
+
+### 2. Use the Onboarding Component
+
+```tsx
+// MerchantOnboardingScreen.tsx
+import React from 'react';
+import { MerchantOnboarding } from '@airxpay/sdk-init-ui';
+
+const MerchantOnboardingScreen = () => {
+  const handleComplete = (merchantData) => {
+    console.log('Onboarding complete:', merchantData);
+    // Navigate to next screen
+  };
+
+  return (
+    <MerchantOnboarding
+      mode="test"
+      isKycCompleted={false}
+      isBankDetailsCompleted={false}
+      kycStatus="not_submitted"
+      status="pending"
+      onNext={(data, step) => console.log('Step:', step, data)}
+      onBack={(step) => console.log('Back to:', step)}
+      onComplete={handleComplete}
+    />
+  );
+};
+```
+
+---
+
+## 🏗 Architecture
+
+```
+@airxpay/sdk-init-ui/
+├── components/
+│   ├── steps/
+│   │   ├── BasicDetailsForm      # Step 1: Basic Info
+│   │   ├── KYCVerification       # Step 2: KYC Documents
+│   │   ├── BankDetails           # Step 3: Bank Account
+│   │   └── OnboardingComplete    # Step 5: Success Screen
+│   └── onboarding/
+│       ├── FinalStepScreen        # Step 4: Review & Submit
+│       └── MerchantOnboarding     # Main Container (5 steps)
+├── contexts/
+│   └── AirXPayProvider            # Global Context
+├── hooks/
+│   └── useMerchantOnboarding       # Custom Hook
+├── api/
+│   ├── merchantProxy               # API Proxy Functions
+│   └── client                      # HTTP Client
+├── utils/
+│   ├── tokenStorage                # Token Management
+│   └── jwt                         # JWT Utilities
+├── types/
+│   └── merchantTypes               # TypeScript Types
+└── etc/
+    └── constants                   # App Constants
+```
+
+---
+
+## 🎨 Components
+
+### MerchantOnboarding (5-Step Flow)
+
+The main container component that manages the entire onboarding flow.
+
+```tsx
+<MerchantOnboarding
+  mode="test"                       // 'test' | 'live'
+  isKycCompleted={false}             // Initial KYC status
+  isBankDetailsCompleted={false}     // Initial bank status
+  kycStatus="not_submitted"          // 'not_submitted' | 'pending' | 'verified' | 'rejected'
+  status="pending"                   // 'pending' | 'active' | 'suspended' | 'blocked'
+  onNext={(data, step) => {}}        // Step completion callback
+  onBack={(step) => {}}              // Back navigation callback
+  onComplete={(merchant) => {}}      // Final completion callback
+/>
+```
+
+#### Steps Overview
+
+| Step | Name | Description |
+|------|------|-------------|
+| 1 | Basic Details | Name, email, phone, business type |
+| 2 | KYC Verification | PAN, Aadhaar, document upload |
+| 3 | Bank Details | Account number, IFSC, cancelled cheque |
+| 4 | Final Review | Review & submit to backend |
+| 5 | Complete | Success screen with merchant status |
+
+---
+
+### BasicDetailsForm
+
+Collects basic merchant information.
+
+**Props:**
+```tsx
+interface BasicDetailsFormProps {
+  initialData: Partial<Merchant>;
+  onNext: (data: Partial<Merchant>) => void;
+  errors: FormErrors;
+  setErrors: (errors: FormErrors) => void;
+}
+```
+
+**Features:**
+- ✅ Real-time validation
+- ✅ Business type toggle (Individual/Company)
+- ✅ Country dropdown
+- ✅ Date of birth picker
+- ✅ Category selection chips
+
+---
+
+### KYCVerification
+
+Handles KYC document collection and verification.
+
+**Props:**
+```tsx
+interface KYCVerificationProps {
+  initialData: Partial<Merchant>;
+  mode: Mode;
+  kycStatus: KycStatus;
+  onNext: (data: Partial<Merchant>) => void;
+  onBack: () => void;
+}
+```
+
+**Documents Collected:**
+- 📄 PAN Card
+- 🆔 Aadhaar Card
+- 📸 Selfie
+- 🏠 Address Proof
+
+**Features:**
+- ✅ Document type validation
+- ✅ Upload progress indicator
+- ✅ Status badges
+- ✅ Progress tracking
+
+---
+
+### BankDetails
+
+Collects bank account information.
+
+**Props:**
+```tsx
+interface BankDetailsProps {
+  initialData: Partial<Merchant>;
+  mode: Mode;
+  onNext: (data: Partial<Merchant>) => void;
+  onBack: () => void;
+}
+```
+
+**Fields:**
+- 👤 Account Holder Name
+- 🏦 Bank Name
+- 💳 Account Number (masked)
+- 🔢 IFSC Code (with validation)
+- 📱 UPI ID (optional)
+- 📄 Cancelled Cheque Upload
+
+**Features:**
+- ✅ IFSC code validation
+- ✅ Account number masking
+- ✅ Real-time validation
+- ✅ Test mode notice
+
+---
+
+### FinalStepScreen
+
+Review and submit final merchant data.
+
+**Props:**
+```tsx
+interface FinalStepScreenProps {
+  publicKey: string;
+  onSuccess: (response: any) => void;
+  onError?: (error: any) => void;
+  initialData?: Partial<CreateMerchantPayload>;
+}
+```
+
+**Features:**
+- ✅ Review all entered information
+- ✅ Terms agreement checkbox
+- ✅ Loading state during submission
+- ✅ Error handling with alerts
+
+---
+
+### OnboardingCompleteScreen
+
+Displays merchant status after successful creation.
+
+**Props:**
+```tsx
+interface OnboardingCompleteScreenProps {
+  onContinue?: () => void;
+  onLogout?: () => void;
+  autoFetch?: boolean;
+}
+```
+
+**Features:**
+- ✅ Auto-fetch merchant status
+- ✅ Status badges (Active/Suspended/Blocked)
+- ✅ KYC status display
+- ✅ Refresh button
+- ✅ Continue & Logout buttons
+
+---
+
+## 🪝 Hooks
+
+### useMerchantOnboarding
+
+```tsx
+const {
+  loading,                          // boolean - API call in progress
+  error,                            // AppError | null
+  merchantData,                      // MerchantCreateResponse | null
+  merchantStatus,                    // MerchantStatusResponse | null
+  initialize,                        // (publicKey: string) => void
+  createMerchant,                     // (payload) => Promise
+  fetchStatus,                        // () => Promise
+  clearError,                         // () => void
+  reset                               // () => void
+} = useMerchantOnboarding();
+```
+
+### useAirXPay
+
+```tsx
+const {
+  publicKey,
+  isValid,
+  loading,
+  merchantData,
+  hasToken,
+  merchantId,
+  logout
+} = useAirXPay();
+```
+
+### useAirXPaySafe
+
+Safe version that returns `null` instead of throwing error.
+
+### useProviderReady
+
+Returns `boolean` indicating if provider is ready.
+
+---
+
+## 📚 API Reference
+
+### merchantProxy.ts
+
+| Function | Description |
+|----------|-------------|
+| `initializeInternalApi(publicKey)` | Initialize SDK with public key |
+| `createMerchantInternal(payload)` | Create merchant via backend proxy |
+| `getMerchantStatusInternal()` | Fetch merchant status |
+| `refreshMerchantTokenInternal()` | Refresh auth token |
+| `verifyPublicKey(publicKey)` | Verify public key validity |
+
+### tokenStorage.ts
+
+| Function | Description |
+|----------|-------------|
+| `getStoredToken()` | Get stored token |
+| `setStoredToken(token)` | Store token |
+| `clearStoredToken()` | Clear stored token |
+| `storeMerchantData(data)` | Cache merchant data |
+| `getStoredMerchantData()` | Get cached merchant data |
+
+### jwt.ts
+
+| Function | Description |
+|----------|-------------|
+| `decodeJWT(token)` | Decode JWT payload |
+| `getMerchantIdFromToken(token)` | Extract merchant ID |
+| `isTokenExpired(token)` | Check token expiry |
+
+---
+
+## 📝 Types
+
+```tsx
+type BusinessType = 'individual' | 'company';
+type Mode = 'test' | 'live';
+type MerchantStatus = 'active' | 'suspended' | 'blocked' | 'pending';
+type KycStatus = 'not_submitted' | 'pending' | 'verified' | 'rejected';
+
+interface Merchant {
+  merchantId: string;
+  merchantName: string;
+  merchantEmail: string;
+  merchantPhone?: string;
+  businessName?: string;
+  businessType?: BusinessType;
+  kycStatus: KycStatus;
+  status: MerchantStatus;
+  mode: Mode;
+  // ... more fields
+}
+
+interface CreateMerchantPayload {
+  merchantName: string;
+  merchantEmail: string;
+  merchantPhone?: string;
+  businessName?: string;
+  businessType?: BusinessType;
+  mode?: Mode;
+  // ... more fields
+}
+```
+
+---
+
+## 🔧 Backend Integration
+
+### Required Backend Endpoints
+
+```tsx
+// Your backend must implement these endpoints:
+POST   /api/merchant/create           // Create merchant (uses secret key)
+GET    /api/merchant/status            // Get merchant status
+POST   /api/merchant/refresh-token     // Refresh token
+POST   /api/merchant/verify-public-key // Verify public key
+```
+
+### Backend Example (Node.js/Express)
+
+```tsx
+// backend/routes/merchant.ts
+import { initializeInternalApi, createMerchantInternal } from '@airxpay/internal-sdk';
+
+// Initialize with SECRET KEY (server-side only!)
+initializeInternalApi(process.env.AIRXPAY_SECRET_KEY);
+
+router.post('/create', async (req, res) => {
+  try {
+    const { publicKey, ...payload } = req.body;
+    
+    // Validate public key
+    if (!publicKey) {
+      return res.status(400).json({ error: 'Public key required' });
+    }
+
+    // Create merchant using secret key
+    const result = await createMerchantInternal(payload);
+    
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+```
+
+---
+
+## 💡 Examples
+
+### Complete Implementation
+
+```tsx
+// App.tsx
+import React, { useState } from 'react';
+import { SafeAreaView } from 'react-native';
+import { 
+  AirXPayProvider, 
+  MerchantOnboarding,
+  OnboardingCompleteScreen 
+} from '@airxpay/sdk-init-ui';
+
+export default function App() {
+  const [step, setStep] = useState<'onboarding' | 'complete'>('onboarding');
+  const [merchantData, setMerchantData] = useState(null);
+
+  const config = {
+    publicKey: 'pk_test_your_public_key',
+    environment: 'test',
+  };
+
+  const handleComplete = (data) => {
+    setMerchantData(data);
+    setStep('complete');
+  };
+
+  return (
+    <AirXPayProvider config={config}>
+      <SafeAreaView style={{ flex: 1 }}>
+        {step === 'onboarding' ? (
+          <MerchantOnboarding
+            mode="test"
+            isKycCompleted={false}
+            isBankDetailsCompleted={false}
+            kycStatus="not_submitted"
+            status="pending"
+            onNext={(data, step) => console.log('Step:', step)}
+            onBack={(step) => console.log('Back:', step)}
+            onComplete={handleComplete}
+          />
+        ) : (
+          <OnboardingCompleteScreen
+            onContinue={() => console.log('Navigate to dashboard')}
+            onLogout={() => {
+              setStep('onboarding');
+              setMerchantData(null);
+            }}
+          />
+        )}
+      </SafeAreaView>
     </AirXPayProvider>
   );
 }
 ```
 
-### 2️⃣ Implement Onboarding
+### Custom Navigation
 
 ```tsx
-// SellerOnboardingScreen.tsx
-import React from 'react';
-import { useAirXPaySheet } from '@airxpay/sdk-ui';
-
-const MySellerOnboarding = () => {
-  return (
-    <useAirXPaySheet
-      sellerId="seller_12345"
-      mode="live"
-      isKycCompleted={false}
-      isBankDetailsCompleted={false}
-      kycStatus="pending"
-      status="pending"
-      onNext={(stepData, currentStep) => {
-        console.log(`Step ${currentStep} completed:`, stepData);
-      }}
-      onBack={(currentStep) => {
-        console.log(`Navigated back from step ${currentStep}`);
-      }}
-      onComplete={(sellerData) => {
-        console.log('🎉 Onboarding complete!', sellerData);
-      }}
-    />
-  );
-};
-
-export default MySellerOnboarding;
-```
-
----
-
-## 📋 Component API
-
-### useAirXPaySheet Props
-
-| Prop | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| sellerId | string | ✅ | - | Unique seller identifier |
-| mode | 'live' \| 'test' | ✅ | - | Environment mode |
-| isKycCompleted | boolean | ✅ | - | KYC completion status |
-| isBankDetailsCompleted | boolean | ✅ | - | Bank details status |
-| kycStatus | string | ✅ | - | 'pending' \| 'verified' \| 'rejected' |
-| status | string | ✅ | - | 'pending' \| 'active' \| 'suspended' |
-| initialStep | number | ❌ | 1 | Starting step (1-4) |
-| initialData | Partial\<Seller\> | ❌ | {} | Pre-filled seller data |
-| loading | boolean | ❌ | false | External loading state |
-| onNext | (data: Partial\<Seller\>, step: number) => void | ✅ | - | Step completion callback |
-| onBack | (step: number) => void | ✅ | - | Back navigation callback |
-| onComplete | (data: Seller) => void | ✅ | - | Final completion callback |
-
-### AirXPayProvider Props
-
-| Prop | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| config.baseUrl | string | ✅ | - | API base URL (must be valid URL) |
-| config.publicKey | string | ✅ | - | API public key (min 20 chars) |
-| children | ReactNode | ✅ | - | Child components |
-| enableLogging | boolean | ❌ | \_\_DEV\_\_ | Enable/disable console logs |
-
----
-
-## 🎣 Hooks & Utilities
-
-```tsx
-import { 
-  useAirXPay,           // Access config (throws if no provider)
-  useAirXPaySafe,       // Safe access (returns null if no provider)
-  useProviderReady,    // Hook: checks if provider is ready
-  useAirXPayConfig,     // Access specific config value
-  AirXPayConsumer       // Context consumer for advanced use
-} from '@airxpay/sdk-ui';
-
-// Example usage
-const { baseUrl, publicKey } = useAirXPay();
-const config = useAirXPaySafe();
-const isReady = useProviderReady();
-const baseUrl = useAirXPayConfig('baseUrl');
-```
-
-### ⚡ Class-based Initialization
-
-The package also provides a class-based approach for scenarios where you need to initialize the SDK asynchronously:
-
-```tsx
-import { useIsAirXPayReady } from '@airxpay/sdk-ui';
-
-// Initialize with config
-const airxpay = new useIsAirXPayReady({
-  baseUrl: 'https://api.airxpay.com',
-  publicKey: 'your_public_key_here'
-});
-
-// Verify credentials asynchronously
-async function initializeSDK() {
-  try {
-    const result = await airxpay.initialize();
-    console.log('SDK initialized successfully:', result);
-  } catch (error) {
-    console.error('Initialization failed:', error);
+const config = {
+  publicKey: 'pk_test_...',
+  customNavigation: {
+    buttonText: 'Go to Dashboard',
+    screenName: 'Dashboard'
   }
+};
+```
+
+---
+
+## ❓ FAQ
+
+### Q: Public key vs Secret key - where to use?
+
+**A:** 
+- **Public Key** - Used on frontend (in `AirXPayProvider`)
+- **Secret Key** - Used on backend only (never expose to frontend)
+
+### Q: How does token refresh work?
+
+**A:** The SDK automatically:
+1. Checks token expiry before each request
+2. Queues requests during token refresh
+3. Retries failed requests with new token
+4. Logs out user if refresh fails
+
+### Q: Can I customize the UI?
+
+**A:** Yes! All components accept custom styles via `style` props. You can also override colors by modifying the theme in `react-native-paper`.
+
+### Q: How do I handle errors?
+
+**A:** The SDK provides comprehensive error handling:
+```tsx
+try {
+  await createMerchant(payload);
+} catch (error) {
+  // error.userMessage - User-friendly message
+  // error.message - Technical message
+  // error.code - Error code
+  Alert.alert('Error', error.userMessage);
 }
 ```
 
----
+### Q: Is Expo supported?
 
-## 🔧 Configuration Validation
-
-The `AirXPayProvider` includes built-in validation that throws clear, actionable errors:
-
-```tsx
-// ❌ This will throw a detailed error
-<AirXPayProvider
-  config={{
-    baseUrl: 'not-a-url',
-    publicKey: 'short'
-  }}
->
-  <App />
-</AirXPayProvider>
-
-// Error message:
-// AirXPayProvider Configuration Error:
-//   • baseUrl must be a valid URL
-//   • publicKey appears to be invalid
-```
-
----
-
-## 🎨 Customization
-
-### Styling
-
-```tsx
-<useAirXPaySheet
-  // ... props
-  styles={{
-    container: { backgroundColor: '#f5f5f5' },
-    stepIndicator: { backgroundColor: '#6200ee' }
-  }}
-/>
-```
-
-### Theme Support
-
-```tsx
-import { Provider as PaperProvider } from 'react-native-paper';
-
-<PaperProvider theme={yourTheme}>
-  <AirXPayProvider config={config}>
-    <useAirXPaySheet {...props} />
-  </AirXPayProvider>
-</PaperProvider>
-```
-### Future Customization Options Hooks and Initialization Like **This Structure Will Be Added In Future Updates To Allow More Flexibility And Control Over** ```The Onboarding Flow And SDK Initialization Process. Stay Tuned For More Enhancements!```
-
-```
-import React from "react";
-import {
-  useAirXPaySheet,
-  useAirXPay,
-  useAirXPaySafe,
-  useProviderReady,
-  useAirXPayConfig,
-} from "@airxpay/sdk-ui";
-import { ActivityIndicator, View, Text } from "react-native";
-
-const SellerOnboardingScreen = () => {
-  const { baseUrl, publicKey } = useAirXPay(); // Throws if provider missing
-  const safeConfig = useAirXPaySafe(); // Returns null if provider missing
-  const isReady = useProviderReady(); // SDK ready check
-  const apiUrl = useAirXPayConfig("baseUrl"); // Specific config
-
-  if (!isReady) {
-    return (
-      <View>
-        <ActivityIndicator />
-        <Text>Initializing AirXPay🔗...</Text>
-      </View>
-    );
-  }
-
-  if (!baseUrl || !publicKey) {
-    return (
-      <View>
-        <Text style={{ color: "red" }}>⚠️ AirXPay configuration missing!</Text>
-      </View>
-    );
-  }
-
-  if (!safeConfig) {
-    return (
-      <View>
-        <Text style={{ color: "red" }}>⚠️ AirXPay safe config missing!</Text>
-      </View>
-    );
-  }
-  if (apiUrl !== baseUrl) {
-    return (
-      <View>
-        <Text style={{ color: "red" }}>⚠️ AirXPay API URL mismatch!</Text>
-      </View>
-    );
-  }
-
-  const sellerSheet = useAirXPaySheet({
-    sellerId: "seller_12345",
-    mode: "live",
-    isKycCompleted: false,
-    isBankDetailsCompleted: false,
-    kycStatus: "pending",
-    status: "pending",
-    onNext: (data: any, step: number) => {
-      console.log(`Step ${step} completed`, data);
-    },
-    onBack: (step: number) => {
-      console.log(`Went back from step ${step}`);
-    },
-    onComplete: (finalData: any) => {
-      console.log("🎉 Onboarding Complete:", finalData);
-    },
-  });
-
-  return sellerSheet; // ✅ just return it directly
-};
-
-export default SellerOnboardingScreen;
-
-```
-
----
-
-## 🔄 Step Flow
-
-```
-Step 1: Basic Details
-├── Seller Name
-├── Email Address
-├── Phone Number
-└── Business Type
-
-Step 2: KYC Verification
-├── Document Upload (PAN/Aadhar)
-├── Selfie Verification
-└── Address Proof
-
-Step 3: Bank Details
-├── Account Number
-├── IFSC Code
-├── Account Holder Name
-└── Bank Branch
-
-Step 4: Completion
-├── Success Animation
-├── Summary View
-└── Next Steps
-```
-
----
-
-## 📝 Exports Reference
-
-```tsx
-// Main exports from index.ts
-export { useIsAirXPayReady } from "./sdk/airxpay";           // Class for async init
-export { AirXPayProvider, useProviderReady, useAirXPayConfig, useAirXPaySafe, useAirXPay } from "./contexts/AirXPayProvider";
-export { default as useAirXPaySheet } from "./hooks/SellerOnboarding";
-export { __DEV__ } from './types/dev';
-
-// Also available via context
-export { 
-  useAirXPay,
-  useAirXPaySafe,
-  useAirXPayConfig,
-  AirXPayConsumer 
-} from './contexts/AirXPayProvider';
-```
-
----
-
-## 🧪 Development Utilities
-
-```tsx
-import { __DEV__ } from '@airxpay/sdk-ui';
-
-if (__DEV__) {
-  console.log('Running in development mode');
-}
-```
-
-The `__DEV__` flag helps you conditionally run code only in development environments.
-
----
-
-## 📈 Performance
-
-- **Memoized Components:** All step components are memoized
-- **Optimized Re-renders:** Context splitting prevents unnecessary renders
-- **Lazy Loading:** Steps load on-demand
-- **Development Logging:** Auto-disabled in production via `__DEV__`
-
----
-
-## 🔒 Security
-
-- All API calls require valid publicKey
-- File uploads are validated client-side
-- Sensitive data never stored in logs
-- HTTPS enforced for all requests
-- XSS protection via input sanitization
-
----
-
-## 🐛 Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| "useAirXPay must be used within AirXPayProvider" | Wrap your component tree with provider |
-| "Public key appears to be invalid" | Check if publicKey is at least 20 chars |
-| "baseUrl must be a valid URL" | Include protocol (https://) in baseUrl |
-| Images not uploading | Check Expo ImagePicker permissions |
-| TypeScript errors | Update to latest version |
-
----
-
-# 🎣 Available Hooks
-
-The **@airxpay/sdk-ui** package provides several utility hooks for accessing configuration, managing initialization state, **and safely interacting with the AirXPayProvider.**
-
-```
-import { 
-  useAirXPay, 
-  useAirXPaySafe, 
-  useProviderReady, 
-  useAirXPayConfig 
-} from '@airxpay/sdk-ui';
-
-1️⃣ useAirXPay()
-const { baseUrl, publicKey } = useAirXPay();
-```
-
-**Provides direct access to the full AirXPay configuration.**
-
-**Behavior**
-
-Must be used inside AirXPayProvider.
-
-Throws an error if the provider is not found.
-
-Ensures strict enforcement of provider usage.
-
-When to Use
-
-Use this hook when you require guaranteed access to configuration values such as baseUrl or publicKey for:
-
-API requests
-
-Dynamic endpoint handling
-
-**Advanced integrations**
-
-# Recommended for: Production components where the provider is always present.
-
-```
-2️⃣ useAirXPaySafe()
-const safeConfig = useAirXPaySafe();
-```
-
-A safe alternative to ```useAirXPay().```
-
-Behavior
-
-Returns null if the provider is not available.
-
-Does not throw an error.
-
-When to Use
-
-Component testing in isolation
-
-Optional integrations
-
-Shared UI components that may or may not be wrapped in the provider
-
-Recommended for: Flexible usage scenarios where provider presence is not guaranteed.
-
-```
-3️⃣ useProviderReady()
-const isReady = useProviderReady();
-```
-
-Checks whether the SDK has been fully initialized.
-
-Behavior
-
-Returns a boolean indicating initialization state.
-
-Useful for asynchronous setup workflows.
-
-When to Use
-
-Conditional rendering
-
-Showing loaders before initialization
-
-Delaying onboarding UI until SDK is ready
-
-Recommended for: Applications using async initialization or class-based setup.
-
-```
-4️⃣ useAirXPayConfig(key)
-const apiUrl = useAirXPayConfig('baseUrl');
-```
-
-Retrieves a specific configuration value from the provider.
-
-Behavior
-
-Accepts a configuration key ```(e.g., 'baseUrl', 'publicKey').```
-
-Returns only the requested value.
-
-When to Use
-
-Accessing a single configuration property
-
-Avoiding full object destructuring
-
-Cleaner and more focused component logic
-
-Recommended for: Minimal, targeted configuration access.
-
-```📌 Hook Comparison```
-**Hook	Throws Error	Safe Fallback	Primary Purpose**
-
-```
-useAirXPay	✅ Yes	❌ No	Direct access to full configuration
-useAirXPaySafe	❌ No	✅ Yes	Optional/safe configuration access
-useProviderReady	❌ No	✅ Yes	Initialization state check
-useAirXPayConfig	❌ No	✅ Yes	Access a single configuration value
-```
-
-
----
-
-## 📝 Changelog
-
-### v1.0.5 (Latest)
-- Added class-based `useIsAirXPayReady` for async initialization
-- Enhanced error messages with stack traces
-- Added `__DEV__` flag for environment detection
-- Improved TypeScript types
-- Added `enableLogging` prop to provider
-
-### v1.0.3
-- Initial release
-- Basic step flow
-- KYC document upload
-- Bank details validation
+**A:** Yes! Fully compatible with Expo SDK 50+. Uses `expo-linear-gradient` and `@react-native-community/datetimepicker` which are Expo-compatible.
 
 ---
 
 ## 🤝 Contributing
 
+We welcome contributions! Please follow these steps:
+
 1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing`)
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+### Development Setup
+
+```bash
+git clone https://github.com/airxpay/sdk-init-ui.git
+cd sdk-init-ui
+npm install
+npm run storybook  # Run component library
+```
 
 ---
 
 ## 📄 License
 
-MIT License © 2026 Flixora Technologies
+MIT © [AirXPay](https://airxpay.com)
 
 ---
 
 <div align="center">
-  <h3>Built with ❤️ by the Flixora Ecosystem</h3>
-  <p><strong>Your Smile, Our Simplicity 😊</strong></p>
-  <p><sub>Version 1.0.5 | Part of AirXPay, TizzyGo, TizzyOS, and TizzyChat</sub></p>
-  <p><i>We upgraded from v1.0.3 to v1.0.5 to maintain version consistency across our ecosystem. Thanks for your understanding!</i></p>
+  <sub>Built with ❤️ by the AirXPay Team</sub>
+  <br/>
+  <sub>© 2024 AirXPay. All rights reserved.</sub>
 </div>

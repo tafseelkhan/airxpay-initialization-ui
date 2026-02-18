@@ -1,4 +1,4 @@
-// components/SellerOnboardingSheet.tsx
+// components/MerchantOnboardingSheet.tsx
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
@@ -27,10 +27,11 @@ import StepIndicator from '../../common/StepIndicator';
 import BasicDetailsForm from '../../steps/BasicDetailsForm';
 import KYCVerification from '../../steps/KYCVerification';
 import BankDetails from '../../steps/BankDetails';
-import OnboardingComplete from '../../steps/OnboardingComplete';
-import { Seller, SellerOnboardingProps, StepConfig, FormErrors } from '../../../types/sellertypes';
+import { FinalStepScreen } from './FinalStepScreen';
+import { OnboardingCompleteScreen } from '../OnboardingComplete';
+import { Merchant, MerchantOnboardingProps, StepConfig, FormErrors, StepCompletion } from '../../../types/merchantTypes';
 import { useAirXPaySafe } from '../../../contexts/AirXPayProvider';
-import { verifyPublicKey } from '../../../api/seller';
+import { verifyPublicKey } from '../../../api/merchantProxy';
 
 const { width } = Dimensions.get('window');
 
@@ -39,18 +40,20 @@ interface ExtendedStepConfig extends StepConfig {
   icon?: string;
 }
 
+// ✅ 5 STEPS - Added Final Step
 const STEPS: ExtendedStepConfig[] = [
   { id: 1, name: 'Basic Details', key: 'basic', isRequired: true, icon: 'account' },
   { id: 2, name: 'KYC Verification', key: 'kyc', isRequired: true, icon: 'shield-account' },
   { id: 3, name: 'Bank Details', key: 'bank', isRequired: true, icon: 'bank' },
-  { id: 4, name: 'Complete', key: 'complete', isRequired: false, icon: 'check-circle' },
+  { id: 4, name: 'Final Review', key: 'final', isRequired: true, icon: 'file-document' },
+  { id: 5, name: 'Complete', key: 'complete', isRequired: false, icon: 'check-circle' },
 ];
 
 // Default logo - can be overridden via props
 const DEFAULT_LOGO = require('../../../assets/images/airxpay.png');
 
-const SellerOnboardingSheet: React.FC<SellerOnboardingProps> = ({
-  sellerId,
+const MerchantOnboardingSheet: React.FC<MerchantOnboardingProps> = ({
+  merchantId,
   mode,
   isKycCompleted,
   isBankDetailsCompleted,
@@ -79,7 +82,7 @@ const SellerOnboardingSheet: React.FC<SellerOnboardingProps> = ({
 
   // State management
   const [currentStep, setCurrentStep] = useState<number>(initialStep);
-  const [sellerData, setSellerData] = useState<Partial<Seller>>({
+  const [merchantData, setMerchantData] = useState<Partial<Merchant>>({
     mode,
     kycStatus,
     isKycCompleted,
@@ -92,12 +95,25 @@ const SellerOnboardingSheet: React.FC<SellerOnboardingProps> = ({
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isWaitingForBackend, setIsWaitingForBackend] = useState<boolean>(false);
+  
+  // ✅ New state for merchant creation response
+  const [merchantResponse, setMerchantResponse] = useState<any>(null);
 
-  // Track completion status of each step
-  const [stepCompletion, setStepCompletion] = useState({
-    basic: !!initialData.sellerName && !!initialData.sellerEmail,
-    kyc: isKycCompleted || false,
-    bank: isBankDetailsCompleted || false,
+  // Track completion status of each step dynamically
+  const [stepCompletion, setStepCompletion] = useState<StepCompletion>(() => {
+    const basicCompleted = !!(
+      initialData.merchantName && 
+      initialData.merchantName.trim() !== '' &&
+      initialData.merchantEmail && 
+      initialData.merchantEmail.trim() !== ''
+    );
+    
+    return {
+      basic: basicCompleted,
+      kyc: isKycCompleted || false,
+      bank: isBankDetailsCompleted || false,
+      final: false, // ✅ Final step initially incomplete
+    };
   });
 
   // Verify public key on mount
@@ -113,23 +129,23 @@ const SellerOnboardingSheet: React.FC<SellerOnboardingProps> = ({
         return;
       }
 
-      const { baseUrl, publicKey } = airXPay;
+      const { publicKey } = airXPay;
       
-      if (!baseUrl || !publicKey) {
-        console.error('❌ AirXPay config missing:', { baseUrl: !!baseUrl, publicKey: !!publicKey });
-        setVerificationError('AirXPay configuration incomplete. Both baseUrl and publicKey are required.');
+      if (!publicKey) {
+        console.error('❌ AirXPay config missing:', { publicKey: !!publicKey });
+        setVerificationError('AirXPay configuration incomplete. publicKey is required.');
         setIsValidProvider(false);
         setIsVerifying(false);
         return;
       }
 
-      console.log('✅ AirXPay config found:', { baseUrl, publicKey: publicKey.substring(0, 8) + '...' });
+      console.log('✅ AirXPay config found:', { publicKey: publicKey.substring(0, 8) + '...' });
 
       try {
         setIsVerifying(true);
-        console.log('🔑 Verifying public key with baseUrl:', baseUrl);
+        console.log('🔑 Verifying public key:', publicKey.substring(0, 8) + '...');
         
-        await verifyPublicKey(baseUrl, publicKey);
+        await verifyPublicKey(publicKey);
         
         console.log('✅ Public key verified successfully');
         setIsValidProvider(true);
@@ -205,20 +221,28 @@ const SellerOnboardingSheet: React.FC<SellerOnboardingProps> = ({
     });
   };
 
-  const handleNext = (stepData: Partial<Seller>) => {
-    const updatedData = { ...sellerData, ...stepData };
-    setSellerData(updatedData);
+  const handleNext = (stepData: Partial<Merchant>) => {
+    const updatedData = { ...merchantData, ...stepData };
+    setMerchantData(updatedData);
     
-    // Update step completion status
+    // Update step completion status dynamically
     if (currentStep === 1) {
-      setStepCompletion(prev => ({ 
-        ...prev, 
-        basic: !!(updatedData.sellerName && updatedData.sellerEmail) 
-      }));
+      const basicCompleted = !!(
+        updatedData.merchantName && 
+        updatedData.merchantName.trim() !== '' &&
+        updatedData.merchantEmail && 
+        updatedData.merchantEmail.trim() !== ''
+      );
+      setStepCompletion(prev => ({ ...prev, basic: basicCompleted }));
     } else if (currentStep === 2) {
-      setStepCompletion(prev => ({ ...prev, kyc: true }));
+      const kycCompleted = stepData.isKycCompleted === true || stepData.kycStatus === 'verified';
+      setStepCompletion(prev => ({ ...prev, kyc: kycCompleted }));
     } else if (currentStep === 3) {
-      setStepCompletion(prev => ({ ...prev, bank: true }));
+      const bankCompleted = stepData.isBankDetailsCompleted === true;
+      setStepCompletion(prev => ({ ...prev, bank: bankCompleted }));
+    } else if (currentStep === 4) {
+      // Final step - just mark as completed
+      setStepCompletion(prev => ({ ...prev, final: true }));
     }
     
     // Call onNext callback with step data and current step
@@ -228,7 +252,10 @@ const SellerOnboardingSheet: React.FC<SellerOnboardingProps> = ({
     if (currentStep < STEPS.length) {
       animateStepTransition('next');
       setTimeout(() => {
-        setCurrentStep(prev => prev + 1);
+        setCurrentStep(prev => {
+          const newStep = prev + 1;
+          return newStep;
+        });
       }, 150);
     }
   };
@@ -237,47 +264,109 @@ const SellerOnboardingSheet: React.FC<SellerOnboardingProps> = ({
     if (currentStep > 1) {
       animateStepTransition('back');
       setTimeout(() => {
-        setCurrentStep(prev => prev - 1);
-        onBack(currentStep);
+        setCurrentStep(prev => {
+          const newStep = prev - 1;
+          // Pass the new step to parent
+          onBack(newStep);
+          return newStep;
+        });
       }, 150);
     }
   };
 
   const validateStepData = useCallback((): boolean => {
-    // Validate required fields
-    if (!sellerData.sellerName || !sellerData.sellerEmail) {
-      setErrors({ sellerName: 'Seller name and email are required' });
-      setShowError(true);
-      return false;
-    }
-
-    if (mode === 'live') {
-      if (!stepCompletion.kyc) {
+    // Validate required fields dynamically based on STEPS config
+    const requiredSteps = STEPS.filter(step => step.isRequired && step.id < 5); // Exclude complete step
+    const missingSteps = requiredSteps.filter(step => !stepCompletion[step.key as keyof StepCompletion]);
+    
+    if (missingSteps.length > 0) {
+      const missingStepNames = missingSteps.map(s => s.name).join(', ');
+      
+      // If missing basic details, show inline error
+      if (missingSteps.some(s => s.key === 'basic')) {
+        setErrors({ merchantName: 'Please complete all required fields' });
+        setShowError(true);
+        return false;
+      }
+      
+      // For KYC or Bank, show alert with navigation
+      if (missingSteps.some(s => s.key === 'kyc')) {
         Alert.alert(
           'KYC Pending',
           'Please complete KYC verification first',
           [
             { text: 'Cancel', style: 'cancel' },
-            { text: 'Go to KYC', onPress: () => setCurrentStep(2) }
+            { 
+              text: 'Go to KYC', 
+              onPress: () => {
+                animateStepTransition('next');
+                setCurrentStep(2);
+              }
+            }
           ]
         );
         return false;
       }
-      if (!stepCompletion.bank) {
+      
+      if (missingSteps.some(s => s.key === 'bank')) {
         Alert.alert(
           'Bank Details Pending',
           'Please add bank details first',
           [
             { text: 'Cancel', style: 'cancel' },
-            { text: 'Go to Bank Details', onPress: () => setCurrentStep(3) }
+            { 
+              text: 'Go to Bank Details', 
+              onPress: () => {
+                animateStepTransition('next');
+                setCurrentStep(3);
+              }
+            }
           ]
         );
         return false;
       }
+      
+      if (missingSteps.some(s => s.key === 'final')) {
+        Alert.alert(
+          'Review Pending',
+          'Please review your information on the final step',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { 
+              text: 'Go to Final Step', 
+              onPress: () => {
+                animateStepTransition('next');
+                setCurrentStep(4);
+              }
+            }
+          ]
+        );
+        return false;
+      }
+      
+      setErrors({ general: `Please complete: ${missingStepNames}` });
+      setShowError(true);
+      return false;
     }
 
     return true;
-  }, [sellerData, mode, stepCompletion]);
+  }, [stepCompletion]);
+
+  // ✅ Handle final step success - merchant created
+  const handleFinalStepSuccess = (response: any) => {
+    setMerchantResponse(response);
+    setStepCompletion(prev => ({ ...prev, final: true }));
+    
+    // Move to complete screen after short delay
+    setTimeout(() => {
+      setCurrentStep(5); // Move to complete screen
+    }, 500);
+  };
+
+  // ✅ Handle final step error
+  const handleFinalStepError = (error: any) => {
+    Alert.alert('Error', error.userMessage || 'Failed to create merchant');
+  };
 
   const handleComplete = useCallback(() => {
     // Validate all required data before completing
@@ -285,41 +374,33 @@ const SellerOnboardingSheet: React.FC<SellerOnboardingProps> = ({
       return;
     }
 
-    // Show loading state while waiting for backend confirmation
-    setIsWaitingForBackend(true);
-
-    // Success animation
-    Animated.sequence([
-      Animated.timing(scaleAnim, {
-        toValue: 1.1,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    // Prepare complete seller data
-    const completeSellerData: Seller = {
-      ...sellerData,
-      mode,
-      kycStatus: stepCompletion.kyc ? 'verified' : kycStatus,
+    // Prepare complete merchant data
+    const completeMerchantData: Merchant = {
+      merchantId: merchantData.merchantId || merchantData._id || merchantResponse?.merchant?.merchantId || '',
+      merchantName: merchantData.merchantName || '',
+      merchantEmail: merchantData.merchantEmail || '',
+      merchantPhone: merchantData.merchantPhone || '',
+      merchantDID: merchantData.merchantDID || '',
+      businessName: merchantData.businessName,
+      businessType: merchantData.businessType || 'individual',
+      businessCategory: merchantData.businessCategory,
+      country: merchantData.country || 'India',
+      nationality: merchantData.nationality || 'Indian',
+      dob: merchantData.dob,
+      bankDetails: merchantData.bankDetails,
+      kycDetails: merchantData.kycDetails,
+      mode: mode || 'test',
+      kycStatus: stepCompletion.kyc ? 'verified' : (kycStatus || 'pending'),
       isKycCompleted: stepCompletion.kyc,
       isBankDetailsCompleted: stepCompletion.bank,
       status: status || (mode === 'live' && stepCompletion.kyc && stepCompletion.bank ? 'active' : 'pending'),
-    } as Seller;
+      createdAt: (merchantData as any).createdAt || merchantResponse?.merchant?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
 
-    // Call onComplete with seller data
-    onComplete(completeSellerData);
-  }, [sellerData, mode, status, kycStatus, stepCompletion, onComplete, validateStepData]);
-
-  // This function would be called by the parent when backend confirms creation
-  const handleBackendConfirmation = useCallback(() => {
-    setIsWaitingForBackend(false);
-  }, []);
+    // Call onComplete with merchant data
+    onComplete(completeMerchantData);
+  }, [merchantData, mode, status, kycStatus, stepCompletion, merchantResponse, onComplete, validateStepData]);
 
   const getStepTitle = () => {
     const step = STEPS.find(s => s.id === currentStep);
@@ -373,6 +454,7 @@ const SellerOnboardingSheet: React.FC<SellerOnboardingProps> = ({
   };
 
   const renderStep = () => {
+    // Combine external loading and submitting states to prevent double loader
     const isLoading = externalLoading || isSubmitting;
 
     if (isLoading) {
@@ -400,7 +482,7 @@ const SellerOnboardingSheet: React.FC<SellerOnboardingProps> = ({
         case 1:
           return (
             <BasicDetailsForm
-              initialData={sellerData}
+              initialData={merchantData}
               onNext={(data) => handleNext(data)}
               errors={errors}
               setErrors={setErrors}
@@ -409,7 +491,7 @@ const SellerOnboardingSheet: React.FC<SellerOnboardingProps> = ({
         case 2:
           return (
             <KYCVerification
-              initialData={sellerData}
+              initialData={merchantData}
               mode={mode}
               kycStatus={kycStatus}
               onNext={(data) => handleNext(data)}
@@ -419,7 +501,7 @@ const SellerOnboardingSheet: React.FC<SellerOnboardingProps> = ({
         case 3:
           return (
             <BankDetails
-              initialData={sellerData}
+              initialData={merchantData}
               mode={mode}
               onNext={(data) => handleNext(data)}
               onBack={handleBack}
@@ -427,17 +509,29 @@ const SellerOnboardingSheet: React.FC<SellerOnboardingProps> = ({
           );
         case 4:
           return (
-            <OnboardingComplete
-              sellerData={sellerData as Seller}
-              mode={mode}
-              status={status}
-              kycStatus={kycStatus}
-              isBankDetailsCompleted={stepCompletion.bank}
-              isKycCompleted={stepCompletion.kyc}
-              isBasicCompleted={stepCompletion.basic}
-              onComplete={handleComplete}
-              isWaitingForBackend={isWaitingForBackend}
-              onBackendConfirmed={handleBackendConfirmation}
+            <FinalStepScreen
+              publicKey={airXPay?.publicKey || ''}
+              onSuccess={handleFinalStepSuccess}
+              onError={handleFinalStepError}
+              initialData={{
+                merchantName: merchantData.merchantName,
+                merchantEmail: merchantData.merchantEmail,
+                merchantPhone: merchantData.merchantPhone,
+                businessName: merchantData.businessName,
+                businessType: merchantData.businessType,
+                businessCategory: merchantData.businessCategory,
+                country: merchantData.country,
+                nationality: merchantData.nationality,
+                mode: mode,
+              }}
+            />
+          );
+        case 5:
+          return (
+            <OnboardingCompleteScreen
+              onContinue={handleComplete}
+              onLogout={() => console.log('Logout')}
+              autoFetch={true}
             />
           );
         default:
@@ -501,7 +595,7 @@ const SellerOnboardingSheet: React.FC<SellerOnboardingProps> = ({
           <Surface style={styles.headerSurface}>
             <View style={styles.header}>
               <View style={styles.headerLeft}>
-                {currentStep > 1 && currentStep < 4 && (
+                {currentStep > 1 && currentStep < 5 && (
                   <TouchableOpacity 
                     onPress={handleBack} 
                     style={styles.backButton}
@@ -524,12 +618,11 @@ const SellerOnboardingSheet: React.FC<SellerOnboardingProps> = ({
                 </View>
               </View>
               
-              {/* Logo Section */}
+              {/* Logo Section - Fixed alignment */}
               <View style={styles.logoContainer}>
                 <Avatar.Image 
-                  size={40} 
+                  size={32} 
                   source={DEFAULT_LOGO}
-                  style={styles.avatar}
                 />
               </View>
             </View>
@@ -636,13 +729,18 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontWeight: '400',
   },
-  avatar: {
-    backgroundColor: '#ffffff',
-  },
   logoContainer: {
-    width: 16,
-    height: 16,
-    left: -24,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   progressContainer: {
     paddingHorizontal: 20,
@@ -707,7 +805,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderRadius: 8,
   },
-  // New styles for provider verification
   verificationContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -743,4 +840,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SellerOnboardingSheet;
+export default MerchantOnboardingSheet;

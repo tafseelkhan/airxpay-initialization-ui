@@ -8,21 +8,24 @@ import {
   Text,
   Alert,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import {
   TextInput,
   HelperText,
   Surface,
   IconButton,
+  ActivityIndicator,
 } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import FileUploader from '../common/FileUploader';
-import { Seller, Mode, BankDetails as BankDetailsType } from '../../types/sellertypes';
+import { Merchant, Mode, BankDetails as BankDetailsType } from '../../types/merchantTypes';
 
 interface BankDetailsProps {
-  initialData: Partial<Seller>;
+  initialData: Partial<Merchant>;
   mode: Mode;
-  onNext: (data: Partial<Seller>) => void;
+  onNext: (data: Partial<Merchant>) => void;
   onBack: () => void;
 }
 
@@ -53,10 +56,30 @@ const BankDetails: React.FC<BankDetailsProps> = ({
   const [errors, setErrors] = useState<FormErrors>({});
   const [showAccountNumber, setShowAccountNumber] = useState<boolean>(false);
   const [formValid, setFormValid] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  // Check if bank details already exist
+  useEffect(() => {
+    if (initialData.bankDetails) {
+      const { accountHolderName, bankName, accountNumber, ifscCode } = initialData.bankDetails;
+      if (accountHolderName && bankName && accountNumber && ifscCode) {
+        // Form is pre-filled with existing data
+        setFormValid(true);
+      }
+    }
+  }, [initialData]);
 
   const validateIFSC = (ifsc: string): boolean => {
     const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
     return ifscRegex.test(ifsc);
+  };
+
+  const validateBankAccount = (accountNumber: string, ifscCode: string): boolean => {
+    // Basic validation - bank code from IFSC should match account number pattern
+    // This is a simplified check - in production, you might want to use a bank validation API
+    const bankCode = ifscCode.substring(0, 4);
+    // Add bank-specific validation if needed
+    return true;
   };
 
   const validateField = (field: BankDetailsFormFields, value: any): string | undefined => {
@@ -64,29 +87,35 @@ const BankDetails: React.FC<BankDetailsProps> = ({
       case 'accountHolderName':
         if (!value?.trim()) return 'Account holder name is required';
         if (value.length < 3) return 'Name must be at least 3 characters';
+        if (value.length > 50) return 'Name must be less than 50 characters';
+        if (!/^[a-zA-Z\s.]+$/.test(value)) return 'Name contains invalid characters';
         return undefined;
 
       case 'bankName':
         if (!value?.trim()) return 'Bank name is required';
+        if (value.length < 3) return 'Bank name must be at least 3 characters';
+        if (value.length > 50) return 'Bank name must be less than 50 characters';
         return undefined;
 
       case 'accountNumber':
         if (!value?.trim()) return 'Account number is required';
-        if (!/^\d{9,18}$/.test(value.replace(/\s/g, ''))) {
-          return 'Invalid account number';
+        const cleaned = value.replace(/\s/g, '');
+        if (!/^\d{9,18}$/.test(cleaned)) {
+          return 'Account number must be 9-18 digits';
         }
         return undefined;
 
       case 'ifscCode':
         if (!value?.trim()) return 'IFSC code is required';
-        if (!validateIFSC(value.toUpperCase())) {
-          return 'Invalid IFSC code';
+        const ifsc = value.toUpperCase().replace(/\s/g, '');
+        if (!validateIFSC(ifsc)) {
+          return 'Invalid IFSC code (e.g., SBIN0123456)';
         }
         return undefined;
 
       case 'upiId':
         if (value && !/^[\w.-]+@[\w.-]+$/.test(value)) {
-          return 'Invalid UPI ID format';
+          return 'Invalid UPI ID format (e.g., name@bank)';
         }
         return undefined;
 
@@ -107,7 +136,7 @@ const BankDetails: React.FC<BankDetailsProps> = ({
     // Check if all required fields have values
     const allRequiredFilled = requiredFields.every(field => {
       const value = formData[field];
-      return value && value.trim().length > 0;
+      return value && value.toString().trim().length > 0;
     });
 
     // Check if there are any errors
@@ -116,34 +145,17 @@ const BankDetails: React.FC<BankDetailsProps> = ({
     // Check if cheque is uploaded
     const hasCheque = cancelledCheque !== undefined && cancelledCheque !== '';
 
-    // Validate each field individually for debugging
-    const fieldValues = {
-      accountHolderName: formData.accountHolderName || 'empty',
-      bankName: formData.bankName || 'empty',
-      accountNumber: formData.accountNumber || 'empty',
-      ifscCode: formData.ifscCode || 'empty',
-      cheque: cancelledCheque || 'empty'
-    };
-
-    const fieldErrors = { ...errors };
-
     const isValid = allRequiredFilled && hasNoErrors && hasCheque;
     setFormValid(isValid);
-    
-    // Debug log
-    console.log('=== Form Validation Debug ===');
-    console.log('Field Values:', fieldValues);
-    console.log('Field Errors:', fieldErrors);
-    console.log('allRequiredFilled:', allRequiredFilled);
-    console.log('hasNoErrors:', hasNoErrors);
-    console.log('hasCheque:', hasCheque);
-    console.log('Form Valid:', isValid);
-    console.log('============================');
   }, [formData, errors, cancelledCheque]);
 
   const handleChange = (field: BankDetailsFormFields, value: string) => {
     if (field === 'ifscCode') {
-      value = value.toUpperCase();
+      value = value.toUpperCase().replace(/\s/g, '');
+    }
+    
+    if (field === 'accountNumber') {
+      value = value.replace(/\D/g, '');
     }
     
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -178,6 +190,7 @@ const BankDetails: React.FC<BankDetailsProps> = ({
 
   const handleChequeUpload = async (file: any) => {
     setUploading(true);
+    // Simulate upload
     setTimeout(() => {
       setCancelledCheque(file.uri || 'uploaded_cheque.jpg');
       setUploading(false);
@@ -224,13 +237,32 @@ const BankDetails: React.FC<BankDetailsProps> = ({
       return;
     }
 
-    onNext({
-      bankDetails: {
-        ...formData as BankDetailsType,
-        cancelledChequeUrl: cancelledCheque,
-      },
-      isBankDetailsCompleted: true,
-    });
+    // Validate bank account combination
+    if (formData.accountNumber && formData.ifscCode) {
+      if (!validateBankAccount(formData.accountNumber, formData.ifscCode)) {
+        Alert.alert('Error', 'Account number and IFSC code do not match');
+        return;
+      }
+    }
+
+    // Show submitting state
+    setIsSubmitting(true);
+
+    // Simulate submission
+    setTimeout(() => {
+      setIsSubmitting(false);
+      onNext({
+        bankDetails: {
+          ...formData as BankDetailsType,
+          cancelledChequeUrl: cancelledCheque,
+        },
+        isBankDetailsCompleted: true,
+      });
+    }, 1000);
+  };
+
+  const handleBack = () => {
+    onBack();
   };
 
   const maskAccountNumber = (value: string) => {
@@ -242,275 +274,300 @@ const BankDetails: React.FC<BankDetailsProps> = ({
   };
 
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={['#FFFFFF', '#F8F9FA']}
-        style={styles.gradient}
-      >
-        <ScrollView 
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+    >
+      <View style={styles.container}>
+        <LinearGradient
+          colors={['#FFFFFF', '#F8F9FA']}
+          style={styles.gradient}
         >
-          {/* Header Card */}
-          <Surface style={styles.headerCard}>
-            <View style={styles.headerIcon}>
-              <IconButton
-                icon="bank"
-                size={24}
-                iconColor="#0066CC"
-              />
-            </View>
-            <View style={styles.headerText}>
-              <Text style={styles.title}>Bank Details</Text>
-              <Text style={styles.subtitle}>
-                Add your bank account for settlements
-              </Text>
-            </View>
-          </Surface>
-
-          {/* Form Card */}
-          <Surface style={styles.formCard}>
-            {/* Progress Steps */}
-            <View style={styles.progressContainer}>
-              <View style={styles.progressStep}>
-                <View style={[styles.progressDot, styles.progressDotCompleted]}>
-                  <IconButton icon="check" size={12} iconColor="#FFFFFF" />
-                </View>
-                <Text style={styles.progressTextCompleted}>Basic</Text>
-              </View>
-              <View style={styles.progressLine} />
-              <View style={styles.progressStep}>
-                <View style={[styles.progressDot, styles.progressDotCompleted]}>
-                  <IconButton icon="check" size={12} iconColor="#FFFFFF" />
-                </View>
-                <Text style={styles.progressTextCompleted}>KYC</Text>
-              </View>
-              <View style={styles.progressLine} />
-              <View style={styles.progressStep}>
-                <LinearGradient
-                  colors={['#0066CC', '#0099FF']}
-                  style={styles.progressDotActive}
+          <ScrollView 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Header Card */}
+            <Surface style={styles.headerCard}>
+              <View style={styles.headerIcon}>
+                <IconButton
+                  icon="bank"
+                  size={24}
+                  iconColor="#0066CC"
                 />
-                <Text style={styles.progressTextActive}>Bank</Text>
               </View>
-            </View>
+              <View style={styles.headerText}>
+                <Text style={styles.title}>Bank Details</Text>
+                <Text style={styles.subtitle}>
+                  Add your bank account for settlements
+                </Text>
+              </View>
+            </Surface>
 
-            {/* Account Holder Name */}
-            <View style={styles.fieldContainer}>
-              <Text style={styles.label}>
-                Account Holder Name <Text style={styles.requiredStar}>*</Text>
-              </Text>
-              <TextInput
-                mode="outlined"
-                value={formData.accountHolderName}
-                onChangeText={(text) => handleChange('accountHolderName', text)}
-                onBlur={() => handleBlur('accountHolderName')}
-                error={!!errors.accountHolderName}
-                style={styles.input}
-                outlineColor="#E5E7EB"
-                activeOutlineColor="#0066CC"
-                left={<TextInput.Icon icon="account" color="#6B7280" size={20} />}
-                placeholder="John Doe"
-                placeholderTextColor="#9CA3AF"
-              />
-              {errors.accountHolderName && (
-                <HelperText type="error" style={styles.errorText}>
-                  {errors.accountHolderName}
-                </HelperText>
-              )}
-            </View>
+            {/* Form Card */}
+            <Surface style={styles.formCard}>
+              {/* Progress Steps */}
+              <View style={styles.progressContainer}>
+                <View style={styles.progressStep}>
+                  <View style={[styles.progressDot, styles.progressDotCompleted]}>
+                    <IconButton icon="check" size={12} iconColor="#FFFFFF" />
+                  </View>
+                  <Text style={styles.progressTextCompleted}>Basic</Text>
+                </View>
+                <View style={styles.progressLine} />
+                <View style={styles.progressStep}>
+                  <View style={[styles.progressDot, styles.progressDotCompleted]}>
+                    <IconButton icon="check" size={12} iconColor="#FFFFFF" />
+                  </View>
+                  <Text style={styles.progressTextCompleted}>KYC</Text>
+                </View>
+                <View style={styles.progressLine} />
+                <View style={styles.progressStep}>
+                  <LinearGradient
+                    colors={['#0066CC', '#0099FF']}
+                    style={styles.progressDotActive}
+                  />
+                  <Text style={styles.progressTextActive}>Bank</Text>
+                </View>
+              </View>
 
-            {/* Bank Name */}
-            <View style={styles.fieldContainer}>
-              <Text style={styles.label}>
-                Bank Name <Text style={styles.requiredStar}>*</Text>
-              </Text>
-              <TextInput
-                mode="outlined"
-                value={formData.bankName}
-                onChangeText={(text) => handleChange('bankName', text)}
-                onBlur={() => handleBlur('bankName')}
-                error={!!errors.bankName}
-                style={styles.input}
-                outlineColor="#E5E7EB"
-                activeOutlineColor="#0066CC"
-                left={<TextInput.Icon icon="bank" color="#6B7280" size={20} />}
-                placeholder="State Bank of India"
-                placeholderTextColor="#9CA3AF"
-              />
-              {errors.bankName && (
-                <HelperText type="error" style={styles.errorText}>
-                  {errors.bankName}
-                </HelperText>
-              )}
-            </View>
-
-            {/* Account Number */}
-            <View style={styles.fieldContainer}>
-              <Text style={styles.label}>
-                Account Number <Text style={styles.requiredStar}>*</Text>
-              </Text>
-              <View>
+              {/* Account Holder Name */}
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>
+                  Account Holder Name <Text style={styles.requiredStar}>*</Text>
+                </Text>
                 <TextInput
                   mode="outlined"
-                  value={formData.accountNumber}
-                  onChangeText={(text) => handleChange('accountNumber', text.replace(/\D/g, ''))}
-                  onBlur={() => handleBlur('accountNumber')}
-                  keyboardType="numeric"
-                  error={!!errors.accountNumber}
-                  style={[styles.input, styles.inputWithRightIcon]}
+                  value={formData.accountHolderName}
+                  onChangeText={(text) => handleChange('accountHolderName', text)}
+                  onBlur={() => handleBlur('accountHolderName')}
+                  error={!!errors.accountHolderName}
+                  style={styles.input}
                   outlineColor="#E5E7EB"
                   activeOutlineColor="#0066CC"
-                  left={<TextInput.Icon icon="credit-card" color="#6B7280" size={20} />}
-                  right={
-                    <TextInput.Icon 
-                      icon={showAccountNumber ? "eye-off" : "eye"} 
-                      onPress={() => setShowAccountNumber(!showAccountNumber)}
-                      color="#6B7280"
-                      size={20}
-                    />
-                  }
-                  placeholder="1234567890"
+                  left={<TextInput.Icon icon="account" color="#6B7280" size={20} />}
+                  placeholder="John Doe"
                   placeholderTextColor="#9CA3AF"
-                  secureTextEntry={!showAccountNumber}
                 />
+                {errors.accountHolderName && (
+                  <HelperText type="error" style={styles.errorText}>
+                    {errors.accountHolderName}
+                  </HelperText>
+                )}
               </View>
-              {errors.accountNumber && (
-                <HelperText type="error" style={styles.errorText}>
-                  {errors.accountNumber}
-                </HelperText>
-              )}
-              {formData.accountNumber && !errors.accountNumber && (
-                <View style={styles.previewContainer}>
-                  <IconButton icon="eye" size={14} iconColor="#6B7280" />
-                  <Text style={styles.previewText}>
-                    {maskAccountNumber(formData.accountNumber)}
-                  </Text>
+
+              {/* Bank Name */}
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>
+                  Bank Name <Text style={styles.requiredStar}>*</Text>
+                </Text>
+                <TextInput
+                  mode="outlined"
+                  value={formData.bankName}
+                  onChangeText={(text) => handleChange('bankName', text)}
+                  onBlur={() => handleBlur('bankName')}
+                  error={!!errors.bankName}
+                  style={styles.input}
+                  outlineColor="#E5E7EB"
+                  activeOutlineColor="#0066CC"
+                  left={<TextInput.Icon icon="bank" color="#6B7280" size={20} />}
+                  placeholder="State Bank of India"
+                  placeholderTextColor="#9CA3AF"
+                />
+                {errors.bankName && (
+                  <HelperText type="error" style={styles.errorText}>
+                    {errors.bankName}
+                  </HelperText>
+                )}
+              </View>
+
+              {/* Account Number */}
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>
+                  Account Number <Text style={styles.requiredStar}>*</Text>
+                </Text>
+                <View>
+                  <TextInput
+                    mode="outlined"
+                    value={formData.accountNumber}
+                    onChangeText={(text) => handleChange('accountNumber', text)}
+                    onBlur={() => handleBlur('accountNumber')}
+                    keyboardType="numeric"
+                    error={!!errors.accountNumber}
+                    style={[styles.input, styles.inputWithRightIcon]}
+                    outlineColor="#E5E7EB"
+                    activeOutlineColor="#0066CC"
+                    left={<TextInput.Icon icon="credit-card" color="#6B7280" size={20} />}
+                    right={
+                      <TextInput.Icon 
+                        icon={showAccountNumber ? "eye-off" : "eye"} 
+                        onPress={() => setShowAccountNumber(!showAccountNumber)}
+                        color="#6B7280"
+                        size={20}
+                      />
+                    }
+                    placeholder="1234567890"
+                    placeholderTextColor="#9CA3AF"
+                    secureTextEntry={!showAccountNumber}
+                    maxLength={18}
+                  />
                 </View>
-              )}
-            </View>
-
-            {/* IFSC Code */}
-            <View style={styles.fieldContainer}>
-              <Text style={styles.label}>
-                IFSC Code <Text style={styles.requiredStar}>*</Text>
-              </Text>
-              <TextInput
-                mode="outlined"
-                value={formData.ifscCode}
-                onChangeText={(text) => handleChange('ifscCode', text)}
-                onBlur={() => handleBlur('ifscCode')}
-                autoCapitalize="characters"
-                error={!!errors.ifscCode}
-                style={styles.input}
-                outlineColor="#E5E7EB"
-                activeOutlineColor="#0066CC"
-                left={<TextInput.Icon icon="qrcode" color="#6B7280" size={20} />}
-                placeholder="SBIN0123456"
-                placeholderTextColor="#9CA3AF"
-                maxLength={11}
-              />
-              {errors.ifscCode && (
-                <HelperText type="error" style={styles.errorText}>
-                  {errors.ifscCode}
-                </HelperText>
-              )}
-            </View>
-
-            {/* UPI ID */}
-            <View style={styles.fieldContainer}>
-              <Text style={styles.label}>UPI ID (Optional)</Text>
-              <TextInput
-                mode="outlined"
-                value={formData.upiId}
-                onChangeText={(text) => handleChange('upiId', text)}
-                onBlur={() => handleBlur('upiId')}
-                error={!!errors.upiId}
-                style={styles.input}
-                outlineColor="#E5E7EB"
-                activeOutlineColor="#0066CC"
-                left={<TextInput.Icon icon="cellphone" color="#6B7280" size={20} />}
-                placeholder="name@bank"
-                placeholderTextColor="#9CA3AF"
-              />
-              {errors.upiId && (
-                <HelperText type="error" style={styles.errorText}>
-                  {errors.upiId}
-                </HelperText>
-              )}
-            </View>
-
-            {/* Cancelled Cheque Upload */}
-            <View style={styles.fieldContainer}>
-              <Text style={styles.label}>
-                Cancelled Cheque <Text style={styles.requiredStar}>*</Text>
-              </Text>
-              <FileUploader
-                label=""
-                required
-                description="Upload a cancelled cheque for verification"
-                icon="file-document"
-                value={cancelledCheque}
-                onUpload={handleChequeUpload}
-                onRemove={handleChequeRemove}
-                uploading={uploading}
-                mode={mode}
-                accept="image/*"
-              />
-            </View>
-
-            {/* Test Mode Notice */}
-            {mode === 'test' && (
-              <Surface style={styles.testModeCard}>
-                <View style={styles.testModeContent}>
-                  <IconButton icon="flask" size={16} iconColor="#92400E" />
-                  <View style={styles.testModeText}>
-                    <Text style={styles.testModeTitle}>Test Mode Active</Text>
-                    <Text style={styles.testModeDescription}>
-                      Bank details are for testing only
+                {errors.accountNumber && (
+                  <HelperText type="error" style={styles.errorText}>
+                    {errors.accountNumber}
+                  </HelperText>
+                )}
+                {formData.accountNumber && !errors.accountNumber && (
+                  <View style={styles.previewContainer}>
+                    <IconButton icon="eye" size={14} iconColor="#6B7280" />
+                    <Text style={styles.previewText}>
+                      {maskAccountNumber(formData.accountNumber)}
                     </Text>
                   </View>
-                </View>
-              </Surface>
-            )}
+                )}
+              </View>
 
-            {/* Action Buttons */}
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity 
-                style={styles.backButton}
-                onPress={onBack}
-              >
-                <Text style={styles.backButtonText}>Back</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[
-                  styles.submitButton,
-                  !formValid && styles.submitButtonDisabled
-                ]}
-                onPress={handleSubmit}
-                disabled={!formValid}
-              >
-                <LinearGradient
-                  colors={formValid ? ['#0066CC', '#0099FF'] : ['#9CA3AF', '#9CA3AF']}
-                  style={styles.submitGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
+              {/* IFSC Code */}
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>
+                  IFSC Code <Text style={styles.requiredStar}>*</Text>
+                </Text>
+                <TextInput
+                  mode="outlined"
+                  value={formData.ifscCode}
+                  onChangeText={(text) => handleChange('ifscCode', text)}
+                  onBlur={() => handleBlur('ifscCode')}
+                  autoCapitalize="characters"
+                  error={!!errors.ifscCode}
+                  style={styles.input}
+                  outlineColor="#E5E7EB"
+                  activeOutlineColor="#0066CC"
+                  left={<TextInput.Icon icon="qrcode" color="#6B7280" size={20} />}
+                  placeholder="SBIN0123456"
+                  placeholderTextColor="#9CA3AF"
+                  maxLength={11}
+                />
+                {errors.ifscCode && (
+                  <HelperText type="error" style={styles.errorText}>
+                    {errors.ifscCode}
+                  </HelperText>
+                )}
+                {formData.ifscCode && !errors.ifscCode && (
+                  <View style={styles.hintContainer}>
+                    <IconButton icon="information" size={14} iconColor="#6B7280" />
+                    <Text style={styles.hintText}>
+                      First 4 letters, then 0, then 6 alphanumeric
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              {/* UPI ID */}
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>UPI ID (Optional)</Text>
+                <TextInput
+                  mode="outlined"
+                  value={formData.upiId}
+                  onChangeText={(text) => handleChange('upiId', text)}
+                  onBlur={() => handleBlur('upiId')}
+                  error={!!errors.upiId}
+                  style={styles.input}
+                  outlineColor="#E5E7EB"
+                  activeOutlineColor="#0066CC"
+                  left={<TextInput.Icon icon="cellphone" color="#6B7280" size={20} />}
+                  placeholder="name@bank"
+                  placeholderTextColor="#9CA3AF"
+                />
+                {errors.upiId && (
+                  <HelperText type="error" style={styles.errorText}>
+                    {errors.upiId}
+                  </HelperText>
+                )}
+              </View>
+
+              {/* Cancelled Cheque Upload */}
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>
+                  Cancelled Cheque <Text style={styles.requiredStar}>*</Text>
+                </Text>
+                <FileUploader
+                  label=""
+                  required
+                  description="Upload a cancelled cheque for verification"
+                  icon="file-document"
+                  value={cancelledCheque}
+                  onUpload={handleChequeUpload}
+                  onRemove={handleChequeRemove}
+                  uploading={uploading}
+                  mode={mode}
+                  accept="image/*"
+                />
+              </View>
+
+              {/* Test Mode Notice */}
+              {mode === 'test' && (
+                <Surface style={styles.testModeCard}>
+                  <View style={styles.testModeContent}>
+                    <IconButton icon="flask" size={16} iconColor="#92400E" />
+                    <View style={styles.testModeText}>
+                      <Text style={styles.testModeTitle}>Test Mode Active</Text>
+                      <Text style={styles.testModeDescription}>
+                        Bank details are for testing only
+                      </Text>
+                    </View>
+                  </View>
+                </Surface>
+              )}
+
+              {/* Action Buttons */}
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity 
+                  style={styles.backButton}
+                  onPress={handleBack}
+                  disabled={isSubmitting}
                 >
-                  <Text style={styles.submitButtonText}>
-                    {mode === 'test' ? 'Complete Test' : 'Save & Continue'}
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
-          </Surface>
-        </ScrollView>
-      </LinearGradient>
-    </View>
+                  <Text style={styles.backButtonText}>Back</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[
+                    styles.submitButton,
+                    (!formValid || isSubmitting) && styles.submitButtonDisabled
+                  ]}
+                  onPress={handleSubmit}
+                  disabled={!formValid || isSubmitting}
+                >
+                  <LinearGradient
+                    colors={formValid && !isSubmitting ? ['#0066CC', '#0099FF'] : ['#9CA3AF', '#9CA3AF']}
+                    style={styles.submitGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    {isSubmitting ? (
+                      <View style={styles.submittingContent}>
+                        <ActivityIndicator size="small" color="#FFFFFF" />
+                        <Text style={[styles.submitButtonText, styles.submittingText]}>
+                          Saving...
+                        </Text>
+                      </View>
+                    ) : (
+                      <Text style={styles.submitButtonText}>
+                        {mode === 'test' ? 'Complete Test' : 'Save & Continue'}
+                      </Text>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </Surface>
+          </ScrollView>
+        </LinearGradient>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 
-// Add debug styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -521,6 +578,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 12,
+    paddingBottom: 24,
   },
   headerCard: {
     flexDirection: 'row',
@@ -649,6 +707,16 @@ const styles = StyleSheet.create({
     color: '#4B5563',
     marginRight: 8,
   },
+  hintContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  hintText: {
+    fontSize: 10,
+    color: '#6B7280',
+    marginLeft: 2,
+  },
   testModeCard: {
     backgroundColor: '#FEF3C7',
     borderRadius: 10,
@@ -680,7 +748,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#E5E7EB',
@@ -688,7 +756,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   backButtonText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '500',
     color: '#6B7280',
   },
@@ -701,13 +769,21 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   submitGradient: {
-    paddingVertical: 8,
+    paddingVertical: 10,
     alignItems: 'center',
   },
   submitButtonText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  submittingContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  submittingText: {
+    marginLeft: 8,
   },
 });
 
