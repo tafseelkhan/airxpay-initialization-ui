@@ -92,7 +92,9 @@ yarn add @flixora/airxpay-sdk-init-ui
 ### Peer Dependencies
 
 ```bash
-npm install react react-native react-native-paper @react-native-async-storage/async-storage expo-linear-gradient @react-native-community/datetimepicker
+npm install @react-native-async-storage/async-storage @react-native-community/datetimepicker @react-navigation/native @types/react axios expo-image-picker expo-linear-gradient expo-module-scripts react react-native react-native-country-picker-modal react-native-paper typescript
+# or
+yarn add --dev @react-native-async-storage/async-storage @react-native-community/datetimepicker @react-navigation/native @types/react axios expo-image-picker expo-linear-gradient expo-module-scripts react react-native react-native-country-picker-modal react-native-paper typescript
 ```
 
 ---
