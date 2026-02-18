@@ -124,6 +124,40 @@ export const createMerchantInternal = async (
   }
 };
 
+// Get merchant status
+export const getMerchantStatusInternal = async (): Promise<MerchantStatusResponse> => {
+  const config = ConfigManager.getInstance();
+  
+  try {
+    config.log('🔍 Fetching merchant status');
+
+    const response = await fetch(`${BACKEND_URL}${API_ENDPOINTS.GET_MERCHANT_STATUS}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw {
+        response: {
+          status: response.status,
+          data
+        }
+      };
+    }
+
+    config.log('✅ Merchant status fetched:', data);
+    return data;
+  } catch (error) {
+    const appError = ErrorHandler.handle(error);
+    config.error('❌ Fetch status failed:', appError);
+    throw appError;
+  }
+};
+
 // Refresh token
 export const refreshMerchantTokenInternal = async (): Promise<{ token: string }> => {
   const config = ConfigManager.getInstance();
