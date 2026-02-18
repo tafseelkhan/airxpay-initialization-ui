@@ -18,7 +18,7 @@ export {
 // ------------------
 export { default as MerchantOnboarding } from './components/steps/onboarding/MerchantOnboarding';
 export { OnboardingCompleteScreen } from './components/steps/OnboardingComplete';
-export { useIsAirXPayReady } from './sdk/airxpay';
+export { useIsAirXPayReady } from './dev/airxpay';
 export { useAirXPaySheet } from './hooks/useAirXPaySheet'; // Custom hook for onboarding sheet
 
 // ------------------
