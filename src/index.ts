@@ -22,6 +22,11 @@ export { useIsAirXPayReady } from './sdk/airxpay';
 export { useAirXPaySheet } from './hooks/useAirXPaySheet'; // Custom hook for onboarding sheet
 
 // ------------------
+// HOOKS
+// ------------------
+export { useMerchantOnboarding } from './hooks/useMerchantOnboarding';  // 👈 ADD KARO
+
+// ------------------
 // Types
 // ------------------
 export type {

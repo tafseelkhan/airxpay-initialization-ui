@@ -19,7 +19,7 @@ interface UseMerchantOnboardingReturn {
   merchantStatus: MerchantStatusResponse | null;
   
   // Actions
-  initialize: (publicKey: string) => void;
+  initialize: (publicKey?: string) => void;  // ✅ Made optional
   createMerchant: (payload: CreateMerchantPayload) => Promise<MerchantCreateResponse | null>;
   fetchStatus: () => Promise<MerchantStatusResponse | null>;
   clearError: () => void;
@@ -45,10 +45,19 @@ export const useMerchantOnboarding = (): UseMerchantOnboardingReturn => {
     loadCachedData();
   }, []);
 
-  const initialize = useCallback((publicKey: string) => {
+  // ✅ Updated initialize - now optional publicKey
+  const initialize = useCallback((publicKey?: string) => {
     try {
       initializeInternalApi(publicKey);
-      config.log('Merchant onboarding hook initialized');
+      
+      const hasSecret = config.getSecretKey();
+      const hasClient = config.getClientKey();
+      
+      if (hasSecret && hasClient) {
+        config.log('🚀 Merchant onboarding hook initialized with ALL keys');
+      } else {
+        config.log('🚀 Merchant onboarding hook initialized with public key only');
+      }
     } catch (err) {
       const appError = ErrorHandler.handle(err);
       setError(appError);
@@ -62,21 +71,24 @@ export const useMerchantOnboarding = (): UseMerchantOnboardingReturn => {
     setError(null);
 
     try {
+      config.log('📝 Creating merchant...');
+      
       const response = await createMerchantInternal(payload);
       
       if (response.token) {
         await setStoredToken(response.token);
+        config.log('🔑 Token stored successfully');
       }
       
       await storeMerchantData(response);
       setMerchantData(response);
       
-      config.log('Merchant created successfully:', response);
+      config.log('✅ Merchant created successfully:', response.merchant.merchantId);
       return response;
     } catch (err) {
       const appError = ErrorHandler.handle(err);
       setError(appError);
-      config.error('Create merchant failed:', appError);
+      config.error('❌ Create merchant failed:', appError);
       return null;
     } finally {
       setLoading(false);
@@ -88,14 +100,17 @@ export const useMerchantOnboarding = (): UseMerchantOnboardingReturn => {
     setError(null);
 
     try {
+      config.log('🔍 Fetching merchant status...');
+      
       const status = await getMerchantStatusInternal();
       setMerchantStatus(status);
-      config.log('Merchant status fetched:', status);
+      
+      config.log('✅ Merchant status fetched:', status.status);
       return status;
     } catch (err) {
       const appError = ErrorHandler.handle(err);
       setError(appError);
-      config.error('Fetch status failed:', appError);
+      config.error('❌ Fetch status failed:', appError);
       return null;
     } finally {
       setLoading(false);
@@ -111,6 +126,7 @@ export const useMerchantOnboarding = (): UseMerchantOnboardingReturn => {
     setMerchantStatus(null);
     setError(null);
     setLoading(false);
+    config.log('🔄 Merchant onboarding reset');
   }, []);
 
   return {

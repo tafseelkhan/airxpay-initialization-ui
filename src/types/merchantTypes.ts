@@ -1,6 +1,8 @@
+// src/types/merchantTypes.ts
+
 export type BusinessType = "individual" | "company";
 export type Mode = "test" | "live";
-export type MerchantStatus = "active" | "suspended" | "blocked";
+export type MerchantStatus = "active" | "suspended" | "blocked" | "pending";
 export type KycStatus = "not_submitted" | "pending" | "verified" | "rejected";
 
 export interface KYCDetails {
@@ -13,6 +15,7 @@ export interface KYCDetails {
   addressProofUrl?: string;
   selfieUrl?: string;
 }
+
 export interface BankDetails {
   accountHolderName: string;
   bankName: string;
@@ -43,8 +46,8 @@ export interface Merchant {
   dob?: string;
   kycDetails?: KYCDetails;
   bankDetails?: BankDetails;
-  createdAt?: string;       // <— added
-  updatedAt?: string;       // <— added
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CreateMerchantPayload {
@@ -55,7 +58,7 @@ export interface CreateMerchantPayload {
   businessType?: BusinessType;
   businessCategory?: string;
   country?: string;
-  dob?: Date;
+  dob?: string;
   nationality?: string;
   mode?: Mode;
   metadata?: Record<string, unknown>;
@@ -88,17 +91,22 @@ export interface StepConfig {
   key: "basic" | "kyc" | "bank" | "complete" | "final";
   isRequired: boolean;
 }
+
 export interface FormErrors {
   [key: string]: string | undefined;
 }
+
 export interface StepCompletion {
   basic: boolean;
   kyc: boolean;
   bank: boolean;
+  final: boolean;
 }
 
 export interface AirXPayConfig {
   publicKey: string;
+  secretKey?: string;
+  clientKey?: string;
   customNavigation?: { buttonText: string; screenName: string };
 }
 
@@ -113,4 +121,34 @@ export interface MerchantStatusResponse {
   mode: 'test' | 'live';
   createdAt: string;
   updatedAt: string;
+}
+
+export interface FlixoraConfig {
+  publicKey: string;
+  secretKey?: string;
+  clientKey?: string;
+  environment?: 'test' | 'live';           // 👈 YEH ADD KARO
+  autoRefreshToken?: boolean;               // 👈 YEH ADD KARO
+  tokenRefreshThreshold?: number;            // 👈 YEH ADD KARO
+  enableLogging?: boolean;                   // 👈 YEH ADD KARO
+  customNavigation?: { buttonText: string; screenName: string };
+}
+
+// Global declaration
+declare global {
+  namespace NodeJS {
+    interface Process {
+      flixora?: Record<string, {           // 👈 ANY NAME ALLOWED
+        publicKey?: string;
+        secretKey?: string;
+        clientKey?: string;
+      }>;
+    }
+  }
+}
+
+// Browser compatibility
+if (typeof window !== 'undefined') {
+  (window as any).process = (window as any).process || {};
+  (window as any).process.flixora = (window as any).process.flixora || {};
 }
