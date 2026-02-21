@@ -5,15 +5,21 @@ import { ConfigManager } from '../options/configOptions';
 import { PayloadValidator } from '../schema/validators';
 import { ErrorHandler } from '../error/errorHandler';
 import { API_ENDPOINTS } from '../etc/constants';
-import { FlixoraEncrypted } from '../secure';  // 👈 IMPORT KARO
+import { FlixoraEncrypted } from '../secure';
+import { EventEmitter } from '../core/events/EventEmitter';
+import { EventMap } from '../core/events/types';
+import { getStoredToken } from '../utils/tokenStorage';
 
-const BACKEND_URL = 'http://172.20.10.12:7000';
+const BACKEND_URL = 'http://172.20.10.12:7000'; // Developer's backend URL
+
+let globalEvents: EventEmitter<EventMap> | null = null;
+
+export const setEventEmitter = (emitter: EventEmitter<EventMap>) => {
+  globalEvents = emitter;
+};
 
 export const initializeInternalApi = (publicKey?: string): void => {
   const config = ConfigManager.getInstance();
-  
-  // Load keys from process.flixora (kisi bhi name se)
-  config.loadKeysFromProcess();
   
   if (publicKey) {
     const errors = PayloadValidator.validatePublicKey(publicKey);
@@ -27,36 +33,31 @@ export const initializeInternalApi = (publicKey?: string): void => {
       publicKey 
     });
     
-    // 👇 VAULT MEIN BHI STORE KARO
     const vault = FlixoraEncrypted.getInstance();
     vault.storeKey('publicKey', publicKey);
   }
   
   const finalConfig = config.getFrontendConfig();
   if (!finalConfig?.publicKey) {
-    throw new Error('Public key is required. Set via initializeInternalApi() or process.flixora.ANY_NAME');
+    throw new Error('Public key is required');
   }
 
   config.log('🚀 AirXPay SDK initialized:');
   config.log('  📌 Public key:', finalConfig.publicKey.substring(0, 8) + '...');
-  
-  // 👇 VAULT SE CHECK KARO
-  const vault = FlixoraEncrypted.getInstance();
-  if (vault.hasKey('secretKey')) {
-    config.log('  🔐 Secret key: [ENCRYPTED IN VAULT]');
-  }
-  if (vault.hasKey('clientKey')) {
-    config.log('  🔐 Client key: [ENCRYPTED IN VAULT]');
-  }
 };
 
+/**
+ * ✅ CREATE MERCHANT - ONLY API THAT SHOULD BE USED
+ * This calls the developer's backend, which then calls AirXPay Core
+ */
 export const createMerchantInternal = async (
   payload: CreateMerchantPayload
 ): Promise<MerchantCreateResponse> => {
   const config = ConfigManager.getInstance();
-  const vault = FlixoraEncrypted.getInstance();  // 👈 VAULT GET KARO
+  const vault = FlixoraEncrypted.getInstance();
   
   try {
+    // Validate payload
     const errors = PayloadValidator.validateCreateMerchant(payload);
     if (errors.length > 0) {
       throw {
@@ -73,33 +74,37 @@ export const createMerchantInternal = async (
 
     config.log('📤 Creating merchant with payload:', payload);
 
-    const publicKey = config.getPublicKey();
-    
-    // 👇 VAULT SE DECRYPTED KEYS LO
-    const secretKey = vault.hasKey('secretKey') ? vault.getKey('secretKey') : undefined;
-    const clientKey = vault.hasKey('clientKey') ? vault.getKey('clientKey') : undefined;
+    // Get public key from vault
+    const publicKey = vault.hasKey('publicKey') 
+      ? vault.getKey('publicKey') 
+      : config.getPublicKey();
 
-    const requestBody: any = {
-      ...payload,
-      publicKey
+    if (!publicKey) {
+      throw new Error('Public key is required');
+    }
+
+    // Request body
+    const requestBody = {
+      merchantName: payload.merchantName,
+      merchantEmail: payload.merchantEmail,
+      merchantPhone: payload.merchantPhone,
+      businessName: payload.businessName,
+      businessType: payload.businessType,
+      businessCategory: payload.businessCategory,
+      country: payload.country,
+      nationality: payload.nationality,
+      mode: payload.mode,
+      metadata: payload.metadata
     };
-    
-    if (secretKey) {
-      requestBody.secretKey = secretKey;
-      config.log('🔐 Including secret key in request');
-    }
-    
-    if (clientKey) {
-      requestBody.clientKey = clientKey;
-      config.log('🔐 Including client key in request');
-    }
 
-    config.log('📡 Sending request to:', `${BACKEND_URL}${API_ENDPOINTS.CREATE_MERCHANT}`);
+    config.log('📡 Sending request to developer backend:', `${BACKEND_URL}${API_ENDPOINTS.CREATE_MERCHANT}`);
 
+    // Call DEVELOPER'S BACKEND (not AirXPay Core directly)
     const response = await fetch(`${BACKEND_URL}${API_ENDPOINTS.CREATE_MERCHANT}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Public-Key': publicKey,
       },
       body: JSON.stringify(requestBody),
     });
@@ -115,6 +120,12 @@ export const createMerchantInternal = async (
       };
     }
 
+    // Store token if returned from developer backend
+    if (data.token) {
+      const { setStoredToken } = await import('../utils/tokenStorage');
+      await setStoredToken(data.token);
+    }
+
     config.log('✅ Merchant created successfully:', data);
     return data;
   } catch (error) {
@@ -124,18 +135,30 @@ export const createMerchantInternal = async (
   }
 };
 
-// Get merchant status
+/**
+ * ✅ GET MERCHANT STATUS - ONLY API THAT SHOULD BE USED
+ * This calls the developer's backend with token authentication
+ */
 export const getMerchantStatusInternal = async (): Promise<MerchantStatusResponse> => {
   const config = ConfigManager.getInstance();
   
   try {
-    config.log('🔍 Fetching merchant status');
+    config.log('🔍 Fetching merchant status from developer backend');
+
+    // Get token from storage (handled by tokenManager)
+    const token = await getStoredToken();
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
 
     const response = await fetch(`${BACKEND_URL}${API_ENDPOINTS.GET_MERCHANT_STATUS}`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
     });
 
     const data = await response.json();
@@ -158,12 +181,15 @@ export const getMerchantStatusInternal = async (): Promise<MerchantStatusRespons
   }
 };
 
-// Refresh token
+/**
+ * 🔄 REFRESH TOKEN - HANDLED INTERNALLY ONLY
+ * Called automatically on 401
+ */
 export const refreshMerchantTokenInternal = async (): Promise<{ token: string }> => {
   const config = ConfigManager.getInstance();
   
   try {
-    config.log('🔄 Refreshing token');
+    config.log('🔄 Refreshing token via developer backend');
 
     const response = await fetch(`${BACKEND_URL}${API_ENDPOINTS.REFRESH_TOKEN}`, {
       method: 'POST',
@@ -183,6 +209,11 @@ export const refreshMerchantTokenInternal = async (): Promise<{ token: string }>
       };
     }
 
+    if (data.token) {
+      const { setStoredToken } = await import('../utils/tokenStorage');
+      await setStoredToken(data.token);
+    }
+
     config.log('✅ Token refreshed successfully');
     return data;
   } catch (error) {
@@ -192,12 +223,14 @@ export const refreshMerchantTokenInternal = async (): Promise<{ token: string }>
   }
 };
 
-// Verify public key
+/**
+ * 🔑 VERIFY PUBLIC KEY - Called during initialization
+ */
 export const verifyPublicKey = async (publicKey: string): Promise<{ valid: boolean; merchantData?: any }> => {
   const config = ConfigManager.getInstance();
   
   try {
-    config.log('🔑 Verifying public key:', publicKey.substring(0, 8) + '...');
+    config.log('🔑 Verifying public key with developer backend:', publicKey.substring(0, 8) + '...');
 
     const response = await fetch(`${BACKEND_URL}${API_ENDPOINTS.VERIFY_PUBLIC_KEY}`, {
       method: 'POST',

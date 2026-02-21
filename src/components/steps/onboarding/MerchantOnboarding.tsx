@@ -1,4 +1,4 @@
-// components/MerchantOnboardingSheet.tsx
+// src/components/steps/onboarding/MerchantOnboarding.tsx
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
@@ -27,7 +27,7 @@ import StepIndicator from '../../common/StepIndicator';
 import BasicDetailsForm from '../../steps/BasicDetailsForm';
 import KYCVerification from '../../steps/KYCVerification';
 import BankDetails from '../../steps/BankDetails';
-import { FinalStepScreen } from './FinalStepScreen';
+import { FinalStepScreen } from '../onboarding/FinalStepScreen';
 import { OnboardingCompleteScreen } from '../OnboardingComplete';
 import { Merchant, MerchantOnboardingProps, StepConfig, FormErrors, StepCompletion } from '../../../types/merchantTypes';
 import { useAirXPaySafe } from '../../../contexts/AirXPayProvider';
@@ -38,6 +38,11 @@ const { width } = Dimensions.get('window');
 // Extend StepConfig to include icon
 interface ExtendedStepConfig extends StepConfig {
   icon?: string;
+}
+
+// Extend MerchantOnboardingProps to include onSubmitToBackend
+interface ExtendedMerchantOnboardingProps extends MerchantOnboardingProps {
+  onSubmitToBackend?: (data: any) => Promise<any>; // ✅ Add this prop
 }
 
 // ✅ 5 STEPS - Added Final Step
@@ -52,7 +57,7 @@ const STEPS: ExtendedStepConfig[] = [
 // Default logo - can be overridden via props
 const DEFAULT_LOGO = require('../../../assets/images/airxpay.png');
 
-const MerchantOnboardingSheet: React.FC<MerchantOnboardingProps> = ({
+const MerchantOnboardingSheet: React.FC<ExtendedMerchantOnboardingProps> = ({
   merchantId,
   mode,
   isKycCompleted,
@@ -64,6 +69,7 @@ const MerchantOnboardingSheet: React.FC<MerchantOnboardingProps> = ({
   onNext,
   onBack,
   onComplete,
+  onSubmitToBackend, // ✅ Add this prop
   loading: externalLoading = false,
 }) => {
   // Get configuration from provider
@@ -513,6 +519,7 @@ const MerchantOnboardingSheet: React.FC<MerchantOnboardingProps> = ({
               publicKey={airXPay?.publicKey || ''}
               onSuccess={handleFinalStepSuccess}
               onError={handleFinalStepError}
+              onSubmitToBackend={onSubmitToBackend} // ✅ Pass the prop
               initialData={{
                 merchantName: merchantData.merchantName,
                 merchantEmail: merchantData.merchantEmail,

@@ -22,22 +22,33 @@ interface OnboardingCompleteScreenProps {
   onContinue?: () => void;
   onLogout?: () => void;
   autoFetch?: boolean;
+  merchantId?: string;
+  onStatusFetched?: (status: MerchantStatusResponse) => void;
 }
 
 export const OnboardingCompleteScreen: React.FC<OnboardingCompleteScreenProps> = ({
   onContinue,
   onLogout,
-  autoFetch = true
+  autoFetch = true,
+  merchantId,
+  onStatusFetched
 }) => {
-  const { loading, error, merchantStatus, fetchStatus, clearError } = useMerchantOnboarding();
+  const { loading, error, merchantStatus, fetchStatus, clearError, token } = useMerchantOnboarding();
   const [refreshing, setRefreshing] = useState(false);
 
+  // ✅ Log token on mount (debug)
+  useEffect(() => {
+    console.log('🔑 Token available:', token ? token.substring(0, 10) + '...' : 'No token');
+  }, [token]);
+
+  // ✅ Auto-fetch status when screen loads
   useEffect(() => {
     if (autoFetch) {
       loadStatus();
     }
   }, []);
 
+  // ✅ Handle errors
   useEffect(() => {
     if (error) {
       Alert.alert('Error', error.userMessage);
@@ -47,8 +58,18 @@ export const OnboardingCompleteScreen: React.FC<OnboardingCompleteScreenProps> =
 
   const loadStatus = async () => {
     setRefreshing(true);
-    await fetchStatus();
-    setRefreshing(false);
+    try {
+      console.log('🔍 Fetching merchant status with token...');
+      const status = await fetchStatus();
+      if (status && onStatusFetched) {
+        onStatusFetched(status);
+      }
+      console.log('✅ Status fetched:', status);
+    } catch (err) {
+      console.error('❌ Failed to fetch status:', err);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const handleRefresh = () => {
@@ -174,6 +195,14 @@ export const OnboardingCompleteScreen: React.FC<OnboardingCompleteScreenProps> =
 
           <Text style={styles.title}>{UI_TEXTS.ONBOARDING_COMPLETE.TITLE}</Text>
           <Text style={styles.subtitle}>{UI_TEXTS.ONBOARDING_COMPLETE.SUBTITLE}</Text>
+
+          {/* Token Info (Optional - for debugging) */}
+          {token && (
+            <View style={styles.tokenContainer}>
+              <Text style={styles.tokenLabel}>Token:</Text>
+              <Text style={styles.tokenValue}>{token.substring(0, 20)}...</Text>
+            </View>
+          )}
 
           {/* Refresh Button */}
           <TouchableOpacity style={styles.refreshButton} onPress={handleRefresh} disabled={refreshing}>
@@ -353,6 +382,25 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     textAlign: 'center',
     marginBottom: 16,
+  },
+  tokenContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    padding: 8,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  tokenLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#4B5563',
+    marginRight: 4,
+  },
+  tokenValue: {
+    fontSize: 12,
+    color: '#059669',
+    fontFamily: 'monospace',
   },
   refreshButton: {
     position: 'absolute',

@@ -1,6 +1,6 @@
-// src/types/events.ts
+// src/core/events/types.ts
 
-import { Merchant } from './merchantTypes';
+import { Merchant } from '../../types/merchantTypes';
 
 /**
  * Namespaced event types for merchant onboarding
@@ -69,72 +69,4 @@ export interface IdempotencyRecord {
   processedAt: number;
   completed: boolean;
   response?: any;
-}
-
-/**
- * AirXPay SDK options
- */
-export interface AirXPayOptions {
-  mode?: 'test' | 'live';
-  apiVersion?: string;
-  enableLogging?: boolean;
-}
-// src/types.ts
-
-export interface AirXPayOptions {
-  mode?: 'test' | 'live';
-  enableLogging?: boolean;
-  apiVersion?: string;
-}
-
-export interface CreateMerchantPayload {
-  merchantName: string;
-  merchantEmail: string;
-  merchantPhone?: string;
-  businessName?: string;
-  businessType?: 'individual' | 'company';
-  businessCategory?: string;
-  country?: string;
-  nationality?: string;
-  mode?: 'test' | 'live';
-  metadata?: Record<string, any>;
-}
-
-export interface MerchantResponse {
-  success: boolean;
-  merchant: {
-    merchantId: string;
-    merchantName: string;
-    merchantEmail: string;
-    mode: 'test' | 'live';
-    kycStatus: 'pending' | 'verified' | 'rejected';
-    isKycCompleted: boolean;
-    isBankDetailsCompleted: boolean;
-    status: 'pending' | 'active' | 'suspended' | 'blocked';
-    createdAt: string;
-  };
-}
-
-export interface MerchantStatusResponse {
-  success: boolean;
-  merchantId: string;
-  merchantName: string;
-  merchantEmail: string;
-  mode: 'test' | 'live';
-  kycStatus: 'pending' | 'verified' | 'rejected';
-  kycCompleted: boolean;
-  bankDetailsCompleted: boolean;
-  status: 'pending' | 'active' | 'suspended' | 'blocked';
-  createdAt: string;
-  updatedAt: string;
-}
-
-// Note: The following types are intentionally NOT exported
-// They remain internal to the SDK
-
-export interface ErrorResponse {
-  message: string;
-  userMessage?: string;
-  code?: string;
-  statusCode?: number;
 }

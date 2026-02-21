@@ -13,7 +13,6 @@ import {
 
 /**
  * 🔐 FlixoraEncrypted - Secure Key Management Module
- * ✅ Using custom crypto implementation (no external dependencies)
  */
 export class FlixoraEncrypted {
   private static instance: FlixoraEncrypted;
@@ -39,7 +38,6 @@ export class FlixoraEncrypted {
     this.namespace = options.namespace || 'default';
     this.enableLogging = options.enableLogging || false;
 
-    // Initialize encryption key using custom random generator
     if (options.masterKey) {
       this.encryptionKey = PBKDF2.deriveKey(
         options.masterKey,
@@ -67,9 +65,12 @@ export class FlixoraEncrypted {
         throw new Error('Key name and value are required');
       }
 
+      console.log(`[FlixoraEncrypted] 📦 Storing key: ${keyName}`);
+      console.log(`[FlixoraEncrypted]    Value length: ${keyValue.length} chars`);
+      console.log(`[FlixoraEncrypted]    Value prefix: ${keyValue.substring(0, 8)}...`);
+
       const namespacedKey = this.getNamespacedKey(keyName);
       
-      // Encrypt using custom AES implementation
       const encrypted = AES256.encrypt(keyValue, this.encryptionKey);
 
       const now = Date.now();
@@ -86,28 +87,36 @@ export class FlixoraEncrypted {
         accessCount: 0
       });
 
-      this.log(`✅ Key stored securely: ${keyName}`);
+      console.log(`[FlixoraEncrypted] ✅ Key stored successfully: ${keyName}`);
+      console.log(`[FlixoraEncrypted]    Vault size: ${this.keyStore.size} keys`);
 
       if (this.config.memorySafe) {
         (keyValue as any) = null;
       }
     } catch (error) {
-      this.log(`❌ Failed to store key: ${keyName}`, error);
+      console.error(`[FlixoraEncrypted] ❌ Failed to store key: ${keyName}`, error);
       throw new Error(`Key storage failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   public getKey(keyName: string): string {
     try {
+      console.log(`[FlixoraEncrypted] 🔍 Retrieving key: ${keyName}`);
+      console.log(`[FlixoraEncrypted]    Vault contains: ${Array.from(this.keyStore.keys()).join(', ')}`);
+      
       const namespacedKey = this.getNamespacedKey(keyName);
       
       if (!this.keyStore.has(namespacedKey)) {
+        console.error(`[FlixoraEncrypted] ❌ Key not found in vault: ${keyName}`);
+        console.error(`[FlixoraEncrypted]    Available namespaced keys: ${Array.from(this.keyStore.keys()).join(', ')}`);
         throw new Error(`Key not found: ${keyName}`);
       }
 
       const stored = this.keyStore.get(namespacedKey)!;
+      console.log(`[FlixoraEncrypted]    Key found, expires at: ${new Date(stored.expiresAt).toISOString()}`);
 
       if (Date.now() > stored.expiresAt) {
+        console.log(`[FlixoraEncrypted]    Key expired, auto-encrypting...`);
         this.autoEncryptKey(namespacedKey);
       }
 
@@ -116,34 +125,36 @@ export class FlixoraEncrypted {
       metadata.accessCount++;
       this.metadataStore.set(namespacedKey, metadata);
 
-      // Decrypt using custom AES implementation
       const decrypted = AES256.decrypt(stored.encrypted, this.encryptionKey);
-
-      this.log(`🔑 Key accessed: ${keyName}`);
+      
+      console.log(`[FlixoraEncrypted] ✅ Key retrieved successfully: ${keyName}`);
+      console.log(`[FlixoraEncrypted]    Decrypted prefix: ${decrypted.substring(0, 8)}...`);
 
       return decrypted;
     } catch (error) {
-      this.log(`❌ Failed to retrieve key: ${keyName}`, error);
+      console.error(`[FlixoraEncrypted] ❌ Failed to retrieve key: ${keyName}`, error);
       throw new Error(`Key retrieval failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   public hasKey(keyName: string): boolean {
-    return this.keyStore.has(this.getNamespacedKey(keyName));
+    const hasKey = this.keyStore.has(this.getNamespacedKey(keyName));
+    console.log(`[FlixoraEncrypted] 🔍 Checking key: ${keyName} = ${hasKey}`);
+    return hasKey;
   }
 
   public removeKey(keyName: string): void {
     const namespacedKey = this.getNamespacedKey(keyName);
     this.keyStore.delete(namespacedKey);
     this.metadataStore.delete(namespacedKey);
-    this.log(`🗑️ Key removed: ${keyName}`);
+    console.log(`[FlixoraEncrypted] 🗑️ Key removed: ${keyName}`);
   }
 
   public wipeAllKeys(): void {
     const keyCount = this.keyStore.size;
     this.keyStore.clear();
     this.metadataStore.clear();
-    this.log(`⚠️ Wiped all keys (${keyCount} keys removed)`);
+    console.log(`[FlixoraEncrypted] ⚠️ Wiped all keys (${keyCount} keys removed)`);
   }
 
   private autoEncryptKey(namespacedKey: string): void {
@@ -161,9 +172,9 @@ export class FlixoraEncrypted {
         expiresAt: now + this.config.autoEncryptTimeout
       });
 
-      this.log(`🔄 Auto-encrypted key: ${namespacedKey}`);
+      console.log(`[FlixoraEncrypted] 🔄 Auto-encrypted key: ${namespacedKey}`);
     } catch (error) {
-      this.log(`❌ Auto-encryption failed for: ${namespacedKey}`, error);
+      console.log(`[FlixoraEncrypted] ❌ Auto-encryption failed for: ${namespacedKey}`, error);
     }
   }
 
@@ -179,7 +190,7 @@ export class FlixoraEncrypted {
     }
 
     if (expiredCount > 0) {
-      this.log(`🧹 Auto-encrypted ${expiredCount} expired keys`);
+      console.log(`[FlixoraEncrypted] 🧹 Auto-encrypted ${expiredCount} expired keys`);
     }
   }
 
@@ -205,16 +216,11 @@ export class FlixoraEncrypted {
       this.encryptionKey.fill(0);
     }
     
-    this.log('🛑 FlixoraEncrypted shutdown complete');
+    console.log('[FlixoraEncrypted] 🛑 Shutdown complete');
   }
 
   private getNamespacedKey(keyName: string): string {
     return `${this.namespace}:${keyName}`;
-  }
-
-  private log(message: string, data?: any): void {
-    if (!this.enableLogging) return;
-    console.log(`[FlixoraEncrypted] ${message}`, data ? data : '');
   }
 
   public getKeyMetadata(keyName: string): KeyMetadata | undefined {

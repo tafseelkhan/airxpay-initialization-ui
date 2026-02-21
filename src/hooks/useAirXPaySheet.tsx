@@ -1,3 +1,5 @@
+// src/hooks/useAirXPaySheet.ts
+
 import React from 'react';
 import MerchantOnboardingSheet from '../components/steps/onboarding/MerchantOnboarding';
 import { useAirXPaySafe } from '../contexts/AirXPayProvider';

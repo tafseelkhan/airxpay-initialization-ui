@@ -46,6 +46,7 @@ export interface Merchant {
   dob?: string;
   kycDetails?: KYCDetails;
   bankDetails?: BankDetails;
+  metadata?: Record<string, unknown>;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -76,6 +77,7 @@ export interface MerchantOnboardingProps {
   initialStep?: number;
   isKycCompleted: boolean;
   isBankDetailsCompleted: boolean;
+onSubmitToBackend?: (data: any) => Promise<any>; // ✅ Add this line
   kycStatus: KycStatus;
   status: MerchantStatus;
   initialData?: Partial<Merchant>;

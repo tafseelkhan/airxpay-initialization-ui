@@ -1,11 +1,9 @@
 // src/contexts/AirXPayProvider.tsx
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { AirXPayConfig, MerchantCreateResponse } from '../types/merchantTypes';
-import { getStoredToken, clearStoredToken } from '../utils/tokenStorage';
-// ✅ FIXED: import initializeInternalApi instead of initializeApi
+import { AirXPayConfig, MerchantCreateResponse } from '../types';
+import { tokenManager } from '../utils/token/tokenManager';
 import { initializeInternalApi, verifyPublicKey } from '../api/merchantProxy';
-import { getMerchantIdFromToken } from '../utils/jwt';
 
 interface AirXPayContextType extends AirXPayConfig {
   isValid: boolean;
@@ -13,6 +11,7 @@ interface AirXPayContextType extends AirXPayConfig {
   merchantData?: MerchantCreateResponse;
   hasToken: boolean;
   merchantId?: string;
+  mode: 'test' | 'live';
   setHasToken: (value: boolean) => void;
   logout: () => Promise<void>;
 }
@@ -25,21 +24,27 @@ interface Props {
   enableLogging?: boolean;
 }
 
-export const AirXPayProvider: React.FC<Props> = ({ config, children, enableLogging = __DEV__ }) => {
+export const AirXPayProvider: React.FC<Props> = ({ 
+  config, 
+  children, 
+  enableLogging = __DEV__ 
+}) => {
   const [state, setState] = useState<AirXPayContextType>({
     ...config,
     isValid: false,
     loading: true,
     hasToken: false,
+    mode: 'test',
     setHasToken: () => {},
     logout: async () => {},
   });
 
   const [hasToken, setHasToken] = useState(false);
   const [merchantId, setMerchantId] = useState<string>();
+  const [mode, setMode] = useState<'test' | 'live'>('test');
 
   const logout = useCallback(async () => {
-    await clearStoredToken();
+    await tokenManager.clearToken();
     setHasToken(false);
     setMerchantId(undefined);
     if (enableLogging) console.log('[AirXPay] User logged out');
@@ -53,22 +58,48 @@ export const AirXPayProvider: React.FC<Props> = ({ config, children, enableLoggi
       }
 
       try {
-        // ✅ FIXED: Call initializeInternalApi instead of initializeApi
+        // Initialize internal API
         initializeInternalApi(config.publicKey);
 
-        const token = await getStoredToken();
+        // Check for existing token
+        const token = await tokenManager.getToken();
         const validToken = !!token;
-        const id = validToken ? getMerchantIdFromToken(token) || undefined : undefined;
 
         setHasToken(validToken);
+        
+        // Extract merchantId from token if available
+        let id: string | undefined;
+        if (validToken && token) {
+          try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const payload = JSON.parse(atob(base64));
+            id = payload.merchantId || payload.sub;
+          } catch {
+            // Ignore decode errors
+          }
+        }
+        
         setMerchantId(id);
 
+        // Verify public key with developer backend
         const verification = await verifyPublicKey(config.publicKey);
+        
+        const verifiedMode = verification.merchantData?.mode || 'test';
+        setMode(verifiedMode);
+
+        if (enableLogging) {
+          console.log('[AirXPay] Verification response:', {
+            valid: verification.valid,
+            mode: verifiedMode,
+          });
+        }
 
         setState({
           ...config,
-          isValid: true,
+          isValid: verification.valid,
           loading: false,
+          mode: verifiedMode,
           merchantData: verification.merchantData,
           hasToken: validToken,
           merchantId: id,
@@ -76,25 +107,56 @@ export const AirXPayProvider: React.FC<Props> = ({ config, children, enableLoggi
           logout,
         });
 
-        if (enableLogging) console.log('[AirXPay] Initialized', { hasToken: validToken });
+        if (enableLogging) {
+          console.log('[AirXPay] Initialized successfully', { 
+            hasToken: validToken,
+            mode: verifiedMode 
+          });
+        }
+
       } catch (err: any) {
-        setState({ ...config, isValid: false, loading: false, hasToken: false, setHasToken, logout });
-        if (enableLogging) console.error('[AirXPay] Init failed', err);
+        console.error('[AirXPay] Init failed:', err);
+        
+        setState({ 
+          ...config, 
+          isValid: false, 
+          loading: false, 
+          hasToken: false, 
+          mode: 'test',
+          setHasToken, 
+          logout,
+        });
       }
     };
+    
     initialize();
-  }, [config, enableLogging, logout]);
+  }, [config.publicKey, enableLogging, logout]);
 
-  return <AirXPayContext.Provider value={{ ...state, hasToken, merchantId, setHasToken, logout }}>{children}</AirXPayContext.Provider>;
+  return (
+    <AirXPayContext.Provider 
+      value={{ 
+        ...state, 
+        hasToken, 
+        merchantId, 
+        mode,
+        setHasToken, 
+        logout 
+      }}
+    >
+      {children}
+    </AirXPayContext.Provider>
+  );
 };
 
 export const useAirXPay = (): AirXPayContextType => {
   const context = useContext(AirXPayContext);
-  if (!context) throw new Error('useAirXPay must be used inside <AirXPayProvider>');
+  if (!context) {
+    throw new Error('useAirXPay must be used inside <AirXPayProvider>');
+  }
   return context;
 };
 
-export const useAirXPaySafe = () => {
+export const useAirXPaySafe = (): AirXPayContextType | null => {
   try {
     return useAirXPay();
   } catch {

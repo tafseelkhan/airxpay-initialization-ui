@@ -12,16 +12,13 @@ import {
 } from 'react-native';
 import {
   Text,
-  TextInput,
-  Button,
   ActivityIndicator,
   Surface,
-  HelperText,
   IconButton
 } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useMerchantOnboarding } from '../../../hooks/useMerchantOnboarding';
-import { CreateMerchantPayload, BusinessType } from '../../../types/merchantTypes';
+import { useAirXPay } from '../../../hooks/useAirXPay'; // ✅ CHANGED: useMerchantOnboarding -> useAirXPay
+import { CreateMerchantPayload } from '../../../types';
 import { UI_TEXTS } from '../../../etc/constants';
 
 interface FinalStepScreenProps {
@@ -29,17 +26,21 @@ interface FinalStepScreenProps {
   onSuccess: (response: any) => void;
   onError?: (error: any) => void;
   initialData?: Partial<CreateMerchantPayload>;
+  // ✅ Developer ka backend API call karne ke liye
+  onSubmitToBackend?: (data: any) => Promise<any>;
 }
 
 export const FinalStepScreen: React.FC<FinalStepScreenProps> = ({
   publicKey,
   onSuccess,
   onError,
-  initialData = {}
+  initialData = {},
+  onSubmitToBackend
 }) => {
-  const { loading, error, createMerchant, initialize, clearError } = useMerchantOnboarding();
+  // ✅ CHANGED: useAirXPay hook use kiya (jo sirf createMerchant expose karta hai)
+  const { loading, error, createMerchant, clearError } = useAirXPay();
   
-  const [formData, setFormData] = useState<CreateMerchantPayload>({
+  const [formData] = useState<CreateMerchantPayload>({
     merchantName: initialData.merchantName || '',
     merchantEmail: initialData.merchantEmail || '',
     merchantPhone: initialData.merchantPhone || '',
@@ -52,15 +53,9 @@ export const FinalStepScreen: React.FC<FinalStepScreenProps> = ({
     ...initialData
   });
 
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
-
-  // Initialize SDK with public key
-  useEffect(() => {
-    if (publicKey) {
-      initialize(publicKey);
-    }
-  }, [publicKey]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [step, setStep] = useState<'form' | 'backend' | 'airxpay'>('form');
+  const [backendResponse, setBackendResponse] = useState<any>(null);
 
   // Handle errors
   useEffect(() => {
@@ -71,84 +66,41 @@ export const FinalStepScreen: React.FC<FinalStepScreenProps> = ({
     }
   }, [error]);
 
-  const validateField = (field: keyof CreateMerchantPayload, value: any): string | undefined => {
-    switch (field) {
-      case 'merchantName':
-        if (!value?.trim()) return 'Merchant name is required';
-        if (value.length < 2) return 'Name must be at least 2 characters';
-        return undefined;
-      
-      case 'merchantEmail':
-        if (!value?.trim()) return 'Email is required';
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value)) return 'Invalid email format';
-        return undefined;
-      
-      case 'merchantPhone':
-        if (value && !/^\+?[1-9]\d{1,14}$/.test(value.replace(/[\s-]/g, ''))) {
-          return 'Invalid phone number';
-        }
-        return undefined;
-      
-      case 'businessName':
-        if (formData.businessType === 'company' && !value?.trim()) {
-          return 'Business name is required for companies';
-        }
-        return undefined;
-      
-      default:
-        return undefined;
-    }
-  };
-
-  const handleChange = (field: keyof CreateMerchantPayload, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Clear field error when user types
-    if (fieldErrors[field]) {
-      setFieldErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
-    }
-  };
-
-  const handleBlur = (field: keyof CreateMerchantPayload) => {
-    setTouched(prev => ({ ...prev, [field]: true }));
-    const error = validateField(field, formData[field]);
-    setFieldErrors(prev => ({
-      ...prev,
-      [field]: error || ''
-    }));
-  };
-
-  const validateForm = (): boolean => {
-    const errors: Record<string, string> = {};
-    const fieldsToValidate: (keyof CreateMerchantPayload)[] = ['merchantName', 'merchantEmail'];
-    
-    if (formData.businessType === 'company') {
-      fieldsToValidate.push('businessName');
-    }
-
-    fieldsToValidate.forEach(field => {
-      const error = validateField(field, formData[field]);
-      if (error) errors[field] = error;
-    });
-
-    setFieldErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
   const handleSubmit = async () => {
-    if (!validateForm()) {
-      return;
-    }
+    try {
+      setIsSubmitting(true);
+      
+      // 📤 STEP 1: Developer ka backend API call
+      if (onSubmitToBackend) {
+        setStep('backend');
+        console.log('📤 Calling developer backend API...');
+        
+        const backendResult = await onSubmitToBackend(formData);
+        setBackendResponse(backendResult);
+        
+        console.log('✅ Backend API response received:', backendResult);
+      }
 
-    const response = await createMerchant(formData);
-    
-    if (response) {
-      onSuccess(response);
+      // 🚀 STEP 2: SDK ki createMerchant call (useAirXPay se)
+      setStep('airxpay');
+      console.log('🚀 Calling AirXPay createMerchant...');
+      
+      const merchantResponse = await createMerchant(formData);
+      
+      console.log('✅ Merchant created in AirXPay:', merchantResponse);
+      
+      // 🎉 STEP 3: Success callback with both responses
+      onSuccess({
+        backend: backendResponse,
+        merchant: merchantResponse
+      });
+
+    } catch (err: any) {
+      console.error('❌ Error:', err);
+      onError?.(err);
+    } finally {
+      setIsSubmitting(false);
+      setStep('form');
     }
   };
 
@@ -163,9 +115,7 @@ export const FinalStepScreen: React.FC<FinalStepScreenProps> = ({
       return value && value.toString().trim().length > 0;
     });
 
-    const noErrors = Object.keys(fieldErrors).length === 0;
-
-    return allFilled && noErrors;
+    return allFilled;
   };
 
   return (
@@ -295,20 +245,22 @@ export const FinalStepScreen: React.FC<FinalStepScreenProps> = ({
             <TouchableOpacity
               style={[
                 styles.submitButton,
-                (!isFormValid() || loading) && styles.submitButtonDisabled
+                (!isFormValid() || isSubmitting) && styles.submitButtonDisabled
               ]}
               onPress={handleSubmit}
-              disabled={!isFormValid() || loading}
+              disabled={!isFormValid() || isSubmitting}
             >
               <LinearGradient
-                colors={isFormValid() && !loading ? ['#0066CC', '#0099FF'] : ['#9CA3AF', '#9CA3AF']}
+                colors={isFormValid() && !isSubmitting ? ['#0066CC', '#0099FF'] : ['#9CA3AF', '#9CA3AF']}
                 style={styles.submitGradient}
               >
-                {loading ? (
+                {isSubmitting ? (
                   <View style={styles.loadingContent}>
                     <ActivityIndicator size="small" color="#FFFFFF" />
                     <Text style={styles.submitButtonText}>
-                      {UI_TEXTS.FINAL_STEP.PROCESSING}
+                      {step === 'backend' ? 'Calling Backend...' : 
+                       step === 'airxpay' ? 'Creating Account...' : 
+                       UI_TEXTS.FINAL_STEP.PROCESSING}
                     </Text>
                   </View>
                 ) : (
@@ -500,5 +452,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
   },
 });

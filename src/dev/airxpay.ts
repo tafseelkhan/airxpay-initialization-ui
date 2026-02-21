@@ -1,6 +1,6 @@
 import { verifyPublicKey } from "../api/merchantProxy";
 
-import { AirXPayConfig } from '../types/type';
+import { AirXPayConfig } from '../types';
 
 export class useIsAirXPayReady {
   private publicKey: string;
